@@ -1,0 +1,58 @@
+<!-- Contenedor de alertas local para este formulario -->
+<div id="formAlerts" class="mb-3"></div>
+
+
+<!-- Formulario de alta de pacientes -->
+<form id="formPaciente" novalidate>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="nombre" placeholder="Juan" required pattern="[A-Za-zÀ-ÿ\s]+">
+            <div class="invalid-feedback">Ingrese solo letras.</div>
+        </div>
+        <div class="col-md-6">
+            <label for="apellido" class="form-label">Apellido</label>
+            <input type="text" class="form-control" id="apellido" placeholder="Pérez" required pattern="[A-Za-zÀ-ÿ\s]+">
+            <div class="invalid-feedback">Ingrese solo letras.</div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="dni" class="form-label">DNI</label>
+            <input type="text" class="form-control" id="dni" placeholder="12345678" required pattern="\d{7,8}">
+            <div class="invalid-feedback">Ingrese un DNI válido (7 u 8 números).</div>
+        </div>
+        <div class="col-md-4">
+            <label for="fechaNacimiento" class="form-label">Fecha de Nacimiento</label>
+            <input type="date" class="form-control" id="fechaNacimiento" required>
+            <div class="invalid-feedback">Seleccione una fecha.</div>
+        </div>
+        <div class="col-md-4">
+            <label for="sexo" class="form-label">Sexo</label>
+            <select class="form-select" id="sexo" required>
+                <option value="" selected>Seleccionar</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+                <option value="O">Otro</option>
+            </select>
+            <div class="invalid-feedback">Seleccione un sexo.</div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="telefono" class="form-label">Teléfono</label>
+            <input type="text" class="form-control" id="telefono" placeholder="011-1234-5678" required pattern="\d+">
+            <div class="invalid-feedback">Ingrese solo números.</div>
+        </div>
+        <div class="col-md-6">
+            <label for="domicilio" class="form-label">Domicilio</label>
+            <input type="text" class="form-control" id="domicilio" placeholder="Calle 123, Ciudad" required
+                pattern="[A-Za-z0-9\s]+">
+            <div class="invalid-feedback">Ingrese solo letras y números.</div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+</form>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Usuario - Histolyze</title>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+</head>
+
+<body class="bg-light p-4">
+    <div class="card p-4" style="max-width: 500px; margin: auto;">
+        <h3 class="mb-3">Crear Nuevo Usuario</h3>
+        <form id="formCrearUsuario" novalidate>
+            <div class="mb-3">
+                <label class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Apellido</label>
+                <input type="text" class="form-control" id="apellido" name="apellido" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">DNI</label>
+                <input type="text" class="form-control" id="dni" name="dni" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Crear Usuario</button>
+        </form>
+
+        <div id="usuarioAlert" class="mt-3"></div>
+
+        <h4 class="mt-4">Usuarios Existentes</h4>
+        <table class="table table-striped" id="usuariosTable">
+            <thead>
+                <tr>
+                    <th>DNI</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script type="module" src="./assets/js/usuarios.js"></script>
+</body>
+
+</html>
