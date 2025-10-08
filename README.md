@@ -1,5 +1,7 @@
 # 🧬 Histolyze - Sistema de Gestión de Pacientes para INCAIMEN
 
+![Logo de Histolyze](assets/logo-nombre.png)
+
 Histolyze es una aplicación de escritorio desarrollada para el **Laboratorio de Histocompatibilidad del INCAIMEN** (ubicado en el Hospital Central de Mendoza). El sistema centraliza y automatiza la gestión de pacientes y estudios de histocompatibilidad, reemplazando el seguimiento manual en planillas de papel y Excel.
 
 ## ✨ Características Principales
