@@ -1,5 +1,5 @@
 import { getUsuarioLogueado, logout } from './auth.js';
-import { loadModuleAndInit } from './sidebar.js'; // Reutilizamos la función de carga
+import { loadModuleAndInit, resetToHomeView } from './sidebar.js'; // Reutilizamos la función de carga
 
 export function renderNavbarUsuario() {
     const usuario = getUsuarioLogueado();
@@ -15,6 +15,7 @@ export function initNavbar() {
 
     const perfilLink = document.querySelector('a[data-module="perfil_usuario"]');
     const logoutBtn = document.getElementById('btnLogout');
+    const brandLink = document.getElementById('brand-link');
 
     if (perfilLink) {
         perfilLink.addEventListener('click', (e) => {
@@ -27,6 +28,13 @@ export function initNavbar() {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
             logout();
+        });
+    }
+
+    if (brandLink) {
+        brandLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetToHomeView(); // Llamamos a la función de reseteo
         });
     }
 }

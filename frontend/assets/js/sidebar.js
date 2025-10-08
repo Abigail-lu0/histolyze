@@ -62,3 +62,19 @@ export async function loadModuleAndInit(moduleName, id = null) {
     appContainer.innerHTML = `<div class="alert alert-danger">Error al cargar la sección. Revisa la consola para más detalles.</div>`;
   }
 }
+
+export function resetToHomeView() {
+    const appContainer = document.querySelector("#app");
+    if (appContainer) {
+        // Vuelve a poner el contenido inicial en el área principal
+        appContainer.innerHTML = `
+            <div class="text-center">
+                <img src="assets/img/logo-nombre.png" alt="Logo Histolyze" style="width: 400px; margin-top: 15vh;">
+            </div>
+        `;
+    }
+
+    // Quita la clase 'active' de todos los enlaces del sidebar
+    const sidebarLinks = document.querySelectorAll("#sidebar .nav-link");
+    sidebarLinks.forEach(link => link.classList.remove("active"));
+}
