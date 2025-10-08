@@ -1,6 +1,7 @@
 import { getPacienteById, updatePaciente } from "./api.js";
 import { loadModuleAndInit } from "./sidebar.js";
 import { showAlert } from "./alerts.js";
+import { getUsuarioLogueado } from "./auth.js";
 
 let pacienteActual = null;
 
@@ -88,6 +89,15 @@ function renderDatosPersonales() {
               pacienteActual.centroDialisis || "N/A"
             }</p></div>
         </div>
+        <hr>
+        <div class="row mt-2 text-muted small">
+            <div class="col-md-6"><p><strong>Creado por:</strong> ${
+              pacienteActual.creadoPor || "No registrado"
+            }</p></div>
+            <div class="col-md-6"><p><strong>Última modificación por:</strong> ${
+              pacienteActual.completadoPor || "N/A"
+            }</p></div>
+        </div>
     `;
 
   const editForm = document.getElementById("form-edit-paciente");
@@ -132,6 +142,39 @@ function renderDatosPersonales() {
     .addEventListener("click", toggleEditMode);
 }
 
+function renderAntecedentesGenerales() {
+  const viewContainer = document.getElementById("antecedentes-view");
+  viewContainer.innerHTML = `
+        <p><strong>Diagnóstico:</strong> ${
+          pacienteActual.diagnostico || "N/A"
+        }</p>
+        <p><strong>Medicación Actual:</strong> ${
+          pacienteActual.medicacion || "N/A"
+        }</p>
+        <p><strong>Cantidad de Embarazos:</strong> ${
+          pacienteActual.embarazos || 0
+        }</p> 
+    `;
+
+  const editForm = document.getElementById("form-edit-antecedentes");
+  editForm.innerHTML = `
+        <div class="mb-3">
+            <label class="form-label">Diagnóstico</label>
+            <textarea class="form-control" name="diagnostico" rows="3">${pacienteActual.diagnostico || ''}</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Medicación Actual</label>
+            <textarea class="form-control" name="medicacion" rows="3">${pacienteActual.medicacion || ''}</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Cantidad de Embarazos</label>
+            <input type="number" class="form-control" name="embarazos" value="${pacienteActual.embarazos || 0}" min="0">
+        </div> <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        <button type="button" class="btn btn-secondary" id="btn-cancelar-edicion-antecedentes">Cancelar</button>
+    `;
+    document.getElementById('btn-cancelar-edicion-antecedentes').addEventListener('click', toggleAntecedentesEditMode);
+}
+
 function renderHistorial(tipo, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -150,9 +193,15 @@ function toggleEditMode() {
   document.getElementById("datos-personales-edit").classList.toggle("d-none");
 }
 
+function toggleAntecedentesEditMode() {
+  document.getElementById("antecedentes-view").classList.toggle("d-none");
+  document.getElementById("antecedentes-edit").classList.toggle("d-none");
+}
+
 async function handleEditSubmit(e) {
   e.preventDefault();
   const form = e.target;
+  const usuarioLogueado = getUsuarioLogueado();
 
   // Actualizamos el objeto 'pacienteActual' con los nuevos valores del formulario
   pacienteActual.nombre = form.nombre.value;
@@ -163,6 +212,10 @@ async function handleEditSubmit(e) {
   pacienteActual.mutual = form.mutual.value;
   pacienteActual.centroTx = form.centroTx.value;
   pacienteActual.centroDialisis = form.centroDialisis.value;
+  pacienteActual.medicoSolicitante = form.medicoSolicitante.value;
+  pacienteActual.completadoPor = usuarioLogueado
+    ? `${usuarioLogueado.nombre} ${usuarioLogueado.apellido}`
+    : "Sistema";
 
   try {
     // 1. Guardamos los datos en el backend
@@ -178,6 +231,28 @@ async function handleEditSubmit(e) {
     toggleEditMode();
   } catch (err) {
     showAlert("Error al actualizar el paciente", "danger");
+  }
+}
+
+async function handleEditAntecedentesSubmit(e) {
+  e.preventDefault();
+  const form = e.target;
+  const usuarioLogueado = getUsuarioLogueado();
+
+  pacienteActual.diagnostico = form.diagnostico.value;
+  pacienteActual.medicacion = form.medicacion.value;
+  pacienteActual.embarazos = form.embarazos.value;
+  pacienteActual.completadoPor = usuarioLogueado
+    ? `${usuarioLogueado.nombre} ${usuarioLogueado.apellido}`
+    : "Sistema";
+
+  try {
+    await updatePaciente(pacienteActual.idPaciente, pacienteActual);
+    showAlert("Antecedentes actualizados con éxito", "success");
+    renderAntecedentesGenerales(); // Redibujamos la sección
+    toggleAntecedentesEditMode(); // Cerramos el formulario
+  } catch (err) {
+    showAlert("Error al actualizar los antecedentes", "danger");
   }
 }
 
@@ -291,6 +366,7 @@ async function handleAddOrEditHistorial(e, tipo, modalId) {
   const formData = new FormData(form);
   const registro = Object.fromEntries(formData.entries());
   const index = form.dataset.editingIndex;
+  const usuarioLogueado = getUsuarioLogueado();
 
   if (index) {
     // Editando
@@ -300,6 +376,10 @@ async function handleAddOrEditHistorial(e, tipo, modalId) {
     if (!pacienteActual[tipo]) pacienteActual[tipo] = [];
     pacienteActual[tipo].push(registro);
   }
+
+  pacienteActual.completadoPor = usuarioLogueado
+    ? `${usuarioLogueado.nombre} ${usuarioLogueado.apellido}`
+    : "Sistema";
 
   try {
     await updatePaciente(pacienteActual.idPaciente, pacienteActual);
@@ -368,6 +448,7 @@ export async function initPacienteDetalleModule(id) {
     ).textContent = `Perfil de ${pacienteActual.nombre} ${pacienteActual.apellido}`;
 
     renderDatosPersonales();
+    renderAntecedentesGenerales();
     renderAllHistorials(); // Llamada única para renderizar todas las tablas
 
     document
@@ -381,7 +462,12 @@ export async function initPacienteDetalleModule(id) {
     document
       .getElementById("form-edit-paciente")
       .addEventListener("submit", handleEditSubmit);
-
+    document
+      .getElementById("btn-editar-antecedentes")
+      .addEventListener("click", toggleAntecedentesEditMode);
+    document
+      .getElementById("form-edit-antecedentes")
+      .addEventListener("submit", handleEditAntecedentesSubmit);
     document
       .getElementById("form-add-trasplante")
       .addEventListener("submit", (e) =>

@@ -1,9 +1,8 @@
-import { loginAPI } from './api.js';
+import { loginAPI } from './api.js'; // Asumimos que esta función existe en api.js
 
 function getUsuarios() {
   const usuariosStr = localStorage.getItem("usuarios");
   if (!usuariosStr) {
-    // Si no hay usuarios en localStorage, creamos una lista inicial
     const usuariosIniciales = [
       { dni: "12345678", password: "1234", nombre: "Homero", apellido: "Simpson" },
       { dni: "87654321", password: "abcd", nombre: "Marge", apellido: "Simpson" },
@@ -20,19 +19,27 @@ function guardarUsuarios(usuarios) {
 
 export async function login(dni, password) {
   try {
+    // Intenta el login con la API primero
     const data = await loginAPI(dni, password);
-    if (data.token) {
-      // Guardamos el token en localStorage. Este token es la "llave"
-      // que usaremos para demostrar que estamos autenticados.
+    if (data && data.token) {
       localStorage.setItem("authToken", data.token);
-      
-      // Opcional: El backend podría devolver también los datos del usuario
+      // Aquí el backend debería devolver los datos del usuario para guardarlos
       // localStorage.setItem("usuarioLogueado", JSON.stringify(data.usuario));
-      
       return true;
     }
     return false;
   } catch (error) {
+    // --- LÓGICA DE RESPALDO ---
+    // Si la API falla (porque no está lista), usamos los usuarios locales
+    console.warn("API de login no disponible. Usando fallback de localStorage.");
+    const usuarios = getUsuarios();
+    const usuario = usuarios.find(u => u.dni === dni && u.password === password);
+    if (usuario) {
+      // Guardamos el usuario logueado (sin la contraseña)
+      const { password, ...usuarioSinPassword } = usuario;
+      localStorage.setItem("usuarioLogueado", JSON.stringify(usuarioSinPassword));
+      return true;
+    }
     return false;
   }
 }
@@ -40,7 +47,6 @@ export async function login(dni, password) {
 export async function registrarUsuario(nuevoUsuario) {
   const usuarios = getUsuarios();
   if (usuarios.some(u => u.dni === nuevoUsuario.dni)) {
-    // Lanza un error si el DNI ya existe
     throw new Error("El DNI ya está registrado.");
   }
   usuarios.push(nuevoUsuario);
@@ -48,18 +54,51 @@ export async function registrarUsuario(nuevoUsuario) {
   return nuevoUsuario;
 }
 
-export function cambiarContraseña(dni, nuevaContraseña) {
+export function actualizarUsuario(dni, datosActualizados) {
   const usuarios = getUsuarios();
   const usuarioIndex = usuarios.findIndex(u => u.dni === dni);
 
   if (usuarioIndex !== -1) {
-    // Si se encuentra el usuario, actualiza su contraseña
-    usuarios[usuarioIndex].password = nuevaContraseña;
-    guardarUsuarios(usuarios); // Guarda la lista actualizada
+    // Actualizamos los datos del usuario en la lista general
+    usuarios[usuarioIndex].nombre = datosActualizados.nombre;
+    usuarios[usuarioIndex].apellido = datosActualizados.apellido;
+    guardarUsuarios(usuarios);
+
+    // Verificamos si el usuario editado es el que está logueado
+    const usuarioLogueado = getUsuarioLogueado();
+    if (usuarioLogueado && usuarioLogueado.dni === dni) {
+        // Si es así, actualizamos también la información de la sesión actual
+        usuarioLogueado.nombre = datosActualizados.nombre;
+        usuarioLogueado.apellido = datosActualizados.apellido;
+        localStorage.setItem("usuarioLogueado", JSON.stringify(usuarioLogueado));
+    }
+
     return true;
   }
-  
-  // Devuelve false si el usuario no se encontró (esto no debería pasar si está logueado)
+  return false;
+}
+
+export function eliminarUsuario(dni) {
+  let usuarios = getUsuarios();
+  // Filtramos la lista, quedándonos con todos menos el que coincide con el DNI
+  const usuariosActualizados = usuarios.filter(u => u.dni !== dni);
+
+  // Si la lista cambió de tamaño, significa que se eliminó
+  if (usuariosActualizados.length < usuarios.length) {
+    guardarUsuarios(usuariosActualizados);
+    return true;
+  }
+  return false;
+}
+
+export function cambiarContraseña(dni, nuevaContraseña) {
+  const usuarios = getUsuarios();
+  const usuarioIndex = usuarios.findIndex(u => u.dni === dni);
+  if (usuarioIndex !== -1) {
+    usuarios[usuarioIndex].password = nuevaContraseña;
+    guardarUsuarios(usuarios);
+    return true;
+  }
   return false;
 }
 
@@ -69,5 +108,11 @@ export function getUsuarioLogueado() {
 
 export function logout() {
   localStorage.removeItem("usuarioLogueado");
-  window.location.href = "login.html"; // Redirige al login
+  localStorage.removeItem("authToken"); // También borramos el token
+  window.location.href = "login.html";
+}
+
+// NUEVA FUNCIÓN EXPORTADA para que usuarios.js pueda leer la lista
+export function getTodosLosUsuarios() {
+    return getUsuarios();
 }
