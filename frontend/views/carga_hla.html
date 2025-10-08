@@ -1,0 +1,67 @@
+<!-- Contenedor de alertas local para HLA -->
+<div id="formAlertsHLA" class="mb-3"></div>
+
+<form id="formHLA" novalidate>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="fechaHLA" class="form-label">Fecha</label>
+            <input type="date" class="form-control" id="fechaHLA" required>
+            <div class="invalid-feedback">Seleccione una fecha.</div>
+        </div>
+        <div class="col-md-4">
+            <label for="grupoSanguineoHLA" class="form-label">Grupo sanguíneo</label>
+            <input type="text" class="form-control" id="grupoSanguineoHLA" pattern="^(A|B|AB|O)[+-]$" placeholder="Ej: A+, O-">
+        </div>
+    </div>
+
+    <!-- HLA -->
+    <div class="row g-2">
+        <div class="col-md-3">
+            <label class="form-label">A</label>
+            <input type="text" class="form-control mb-1" id="hlaA1H" placeholder="A1">
+            <input type="text" class="form-control" id="hlaA2H" placeholder="A2">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">B</label>
+            <input type="text" class="form-control mb-1" id="hlaB1H" placeholder="B1">
+            <input type="text" class="form-control" id="hlaB2H" placeholder="B2">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">C</label>
+            <input type="text" class="form-control mb-1" id="hlaC1H" placeholder="C1">
+            <input type="text" class="form-control" id="hlaC2H" placeholder="C2">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">DR</label>
+            <input type="text" class="form-control mb-1" id="hlaDR1H" placeholder="DR1">
+            <input type="text" class="form-control" id="hlaDR2H" placeholder="DR2">
+        </div>
+    </div>
+
+    <div class="row g-2 mt-2">
+        <div class="col-md-3">
+            <label class="form-label">DQA1</label>
+            <input type="text" class="form-control mb-1" id="hlaDQA11H" placeholder="DQA1-1">
+            <input type="text" class="form-control" id="hlaDQA12H" placeholder="DQA1-2">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">DQB1</label>
+            <input type="text" class="form-control mb-1" id="hlaDQB11H" placeholder="DQB1-1">
+            <input type="text" class="form-control" id="hlaDQB12H" placeholder="DQB1-2">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">DPA1</label>
+            <input type="text" class="form-control mb-1" id="hlaDPA11H" placeholder="DPA1-1">
+            <input type="text" class="form-control" id="hlaDPA12H" placeholder="DPA1-2">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">DPB1</label>
+            <input type="text" class="form-control mb-1" id="hlaDPB11H" placeholder="DPB1-1">
+            <input type="text" class="form-control" id="hlaDPB12H" placeholder="DPB1-2">
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+</form>

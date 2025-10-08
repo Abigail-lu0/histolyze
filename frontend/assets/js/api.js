@@ -1,23 +1,18 @@
 // assets/js/api.js
-const API_BASE = "http://localhost:8080/api"; // <- ajustá si tu back usa otro puerto o path
+const API_BASE = "http://localhost:8080/api"; // Ajustar según tu back
 
-// Mocks (fallback)
-function fetchPacientesMock() {
-  return Promise.resolve([
-    { id: 1, nombre: "Juan", apellido: "Pérez", dni: "12345678", fechaNacimiento: "1990-06-01", sexo: "M", telefono: "987654321", domicilio: "Calle Luz 123" },
-    { id: 2, nombre: "Ana", apellido: "Gómez", dni: "87654321", fechaNacimiento: "1990-01-01", sexo: "F", telefono: "123456789", domicilio: "Calle Falsa 123" },
-  ]);
-}
-
+// --- Pacientes ---
 // GET /pacientes
 export async function getPacientes() {
   try {
     const res = await fetch(`${API_BASE}/pacientes`);
-    if (!res.ok) throw new Error("Response not ok");
+    if (!res.ok) throw new Error("Error al obtener pacientes");
     return await res.json();
   } catch (err) {
-    console.warn("getPacientes: backend unreachable, using mock", err);
-    return fetchPacientesMock();
+    console.warn("getPacientes: backend unreachable, usando mock", err);
+    return [
+      { id: 1, nombre: "Juan", apellido: "Pérez", dni: "12345678", fechaNacimiento: "1990-06-01", sexo: "M", telefono: "987654321", domicilio: "Calle Luz 123", nroMuestra:"001", centroTx:"Centro A", medicoSolicitante:"Dr. A", antecedentes:{diagnostico:"...", medicacion:"..."}, hla:[], dsa:[], crossmatch:[], trasplantes:[], transfusiones:[] }
+    ];
   }
 }
 
@@ -27,35 +22,49 @@ export async function crearPaciente(paciente) {
     const res = await fetch(`${API_BASE}/pacientes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(paciente),
+      body: JSON.stringify(paciente)
     });
     if (!res.ok) {
       const txt = await res.text();
-      throw new Error(`Server error: ${res.status} ${txt}`);
+      throw new Error(txt || "Error al crear paciente");
     }
     return await res.json();
   } catch (err) {
-    console.warn("crearPaciente: backend unreachable, simulating save", err);
-    // fallback: simulate success
-    return Promise.resolve({ success: true });
+    console.error("crearPaciente:", err);
+    throw err;
   }
 }
 
-// Usuarios: crear y listar (intenta back, sino localStorage)
+// GET /pacientes/:id
+export async function getPacienteById(id) {
+  try {
+    const res = await fetch(`${API_BASE}/pacientes/${id}`);
+    if (!res.ok) throw new Error("Paciente no encontrado");
+    return await res.json();
+  } catch (err) {
+    console.warn("getPacienteById fallback mock", err);
+    return [
+      { id: 1, nombre: "Juan", apellido: "Pérez", dni: "12345678", fechaNacimiento: "1990-06-01", sexo: "M", telefono: "987654321", domicilio: "Calle Luz 123", nroMuestra:"001", centroTx:"Centro A", medicoSolicitante:"Dr. A", antecedentes:{diagnostico:"...", medicacion:"..."}, hla:[], dsa:[], crossmatch:[], trasplantes:[], transfusiones:[] }
+    ].find(p => p.id == id);
+  }
+}
+
+// --- Usuarios ---
+// POST /usuarios
 export async function crearUsuario(usuario) {
   try {
     const res = await fetch(`${API_BASE}/usuarios`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(usuario),
+      body: JSON.stringify(usuario)
     });
     if (!res.ok) {
       const txt = await res.text();
-      throw new Error(`Server error: ${res.status} ${txt}`);
+      throw new Error(txt || "Error al crear usuario");
     }
     return await res.json();
   } catch (err) {
-    console.warn("crearUsuario: backend unreachable, saving to localStorage", err);
+    console.warn("crearUsuario fallback localStorage", err);
     const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
     if (usuarios.some(u => u.dni === usuario.dni)) {
       return Promise.reject("El DNI ya está registrado");
@@ -66,13 +75,33 @@ export async function crearUsuario(usuario) {
   }
 }
 
+// GET /usuarios
 export async function getUsuarios() {
   try {
     const res = await fetch(`${API_BASE}/usuarios`);
-    if (!res.ok) throw new Error("Server error");
+    if (!res.ok) throw new Error("Error al obtener usuarios");
     return await res.json();
   } catch (err) {
-    console.warn("getUsuarios: backend unreachable, using localStorage", err);
+    console.warn("getUsuarios fallback localStorage", err);
     return JSON.parse(localStorage.getItem("usuarios") || "[]");
+  }
+}
+
+// PUT /pacientes/:id
+export async function updatePaciente(id, pacienteData) {
+  try {
+    const res = await fetch(`${API_BASE}/pacientes/${id}`, {
+      method: "PUT", // Usamos PUT para una actualización completa del objeto
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pacienteData)
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || "Error al actualizar el paciente");
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("updatePaciente:", err);
+    throw err;
   }
 }

@@ -1,0 +1,26 @@
+<div class="card p-4">
+    <h3>Perfil de Usuario</h3>
+
+    <!-- Datos del usuario -->
+    <div id="usuarioDatos">
+        <p><strong>Nombre:</strong> <span id="datoNombre"></span></p>
+        <p><strong>Apellido:</strong> <span id="datoApellido"></span></p>
+        <p><strong>DNI:</strong> <span id="datoDni"></span></p>
+    </div>
+
+    <button id="btnEditarPerfil" class="btn btn-primary mb-3">Editar Contraseña</button>
+
+    <!-- Formulario para cambiar contraseña, inicialmente oculto -->
+    <form id="formEditarPerfil" class="d-none" novalidate>
+        <div class="mb-3">
+            <label>Nueva Contraseña</label>
+            <input type="password" class="form-control" name="password" required>
+        </div>
+        <div class="mb-3">
+            <label>Confirmar Contraseña</label>
+            <input type="password" class="form-control" name="confirmPassword" required>
+        </div>
+        <button type="submit" class="btn btn-success">Guardar Cambios</button>
+        <button type="button" id="btnCancelarEdicion" class="btn btn-secondary">Cancelar</button>
+    </form>
+</div>
