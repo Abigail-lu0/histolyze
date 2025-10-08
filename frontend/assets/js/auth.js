@@ -1,3 +1,5 @@
+import { loginAPI } from './api.js';
+
 function getUsuarios() {
   const usuariosStr = localStorage.getItem("usuarios");
   if (!usuariosStr) {
@@ -16,17 +18,23 @@ function guardarUsuarios(usuarios) {
   localStorage.setItem("usuarios", JSON.stringify(usuarios));
 }
 
-export function login(dni, password) {
-  const usuarios = getUsuarios();
-  const usuario = usuarios.find(u => u.dni === dni && u.password === password);
-  
-  if (usuario) {
-    // Guarda solo la información necesaria del usuario logueado, sin la contraseña
-    const { password, ...usuarioSinPassword } = usuario;
-    localStorage.setItem("usuarioLogueado", JSON.stringify(usuarioSinPassword));
-    return true;
+export async function login(dni, password) {
+  try {
+    const data = await loginAPI(dni, password);
+    if (data.token) {
+      // Guardamos el token en localStorage. Este token es la "llave"
+      // que usaremos para demostrar que estamos autenticados.
+      localStorage.setItem("authToken", data.token);
+      
+      // Opcional: El backend podría devolver también los datos del usuario
+      // localStorage.setItem("usuarioLogueado", JSON.stringify(data.usuario));
+      
+      return true;
+    }
+    return false;
+  } catch (error) {
+    return false;
   }
-  return false;
 }
 
 export async function registrarUsuario(nuevoUsuario) {

@@ -105,3 +105,23 @@ export async function updatePaciente(id, pacienteData) {
     throw err;
   }
 }
+
+// --- Autenticación ---
+// POST /api/auth/login (o como lo llames en tu backend)
+export async function loginAPI(dni, password) {
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, { // Asegúrate de que la URL sea la correcta
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dni, password })
+    });
+    if (!res.ok) {
+      throw new Error("DNI o contraseña incorrectos");
+    }
+    // El backend debería devolver un objeto con un token, ej: { "token": "ey..." }
+    return await res.json(); 
+  } catch (err) {
+    console.error("loginAPI:", err);
+    throw err;
+  }
+}
