@@ -27,9 +27,6 @@ public class Paciente {
 
     private LocalDate fechaNacimiento;
 
-    @Enumerated(EnumType.STRING)  // Guarda como texto en la base de datos
-    private Sexo sexo;
-
     @Column(length = 255)
     private String domicilio;
 
@@ -48,16 +45,14 @@ public class Paciente {
     @Column(length = 100)
     private String mutual;
 
-    // Temporalmente como String
-    private String creadoPor;
-    private String completadoPor;
+    @Column(length = 100)
+    private String medicoSolicitante;
 
-    /*
     @ManyToOne
     @JoinColumn(name = "creado_por", nullable = false)
     private Usuario creadoPor;      // referencia a la entidad Usuario
 
     @ManyToOne
     @JoinColumn(name = "completado_por")
-    private Usuario completadoPor;  // referencia a la entidad Usuario */
+    private Usuario completadoPor;  // referencia a la entidad Usuario
 }

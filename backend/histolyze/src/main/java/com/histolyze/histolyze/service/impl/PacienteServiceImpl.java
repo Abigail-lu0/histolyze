@@ -1,7 +1,8 @@
-package com.histolyze.histolyze.service;
+package com.histolyze.histolyze.service.impl;
 
 import com.histolyze.histolyze.model.Paciente;
 import com.histolyze.histolyze.repository.PacienteRepository;
+import com.histolyze.histolyze.service.PacienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
