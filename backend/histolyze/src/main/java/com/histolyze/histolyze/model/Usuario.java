@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "usuario")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -12,11 +11,24 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idUsuario;
+    private Long idUsuario;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String nombre;
 
-    @Column(nullable = false, length = 255)
-    private String contrasena;
+
+    @Column(unique = true, nullable = false)
+    private String dni;
+
+    @Column(nullable = false)
+    private String password;
+
+    public enum Rol {
+        ADMIN,
+        USER
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Rol role;
 }
