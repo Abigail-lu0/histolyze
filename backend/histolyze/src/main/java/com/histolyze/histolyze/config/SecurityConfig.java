@@ -40,20 +40,26 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // solo admin puede acceder a la gestión de usuarios
+                        // Rutas públicas
+                        .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
+                        // Rutas de admin
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        // todas las demás rutas requieren estar logueado
+                        // Todas las demás requieren autenticación
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
-                        .loginPage("/login")     // tu página de login
-                        .defaultSuccessUrl("/home", true) // a donde va después de loguear
+                .formLogin(login -> login
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/home", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
+                )
+                // Redirección segura si no hay usuarios
+                .exceptionHandling(ex -> ex
+                        .accessDeniedPage("/login?error")
                 );
 
         return http.build();
