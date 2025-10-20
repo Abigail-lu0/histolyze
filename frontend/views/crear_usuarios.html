@@ -6,27 +6,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear Usuario - Histolyze</title>
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
 </head>
 
-<body class="bg-light p-4">
-    <div class="card p-4" style="max-width: 500px; margin: auto;">
+<body class="p-4">
+    <div id="gestionUsuariosContainer" class="card p-4" style="max-width: 600px; margin: auto;">
         <h3 class="mb-3">Crear Nuevo Usuario</h3>
         <form id="formCrearUsuario" novalidate>
-            <div class="mb-3">
-                <label class="form-label">Nombre</label>
-                <input type="text" class="form-control" id="nombre" name="nombre" required>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="crear-nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="crear-nombre" name="nombre" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="crear-apellido" class="form-label">Apellido</label>
+                    <input type="text" class="form-control" id="crear-apellido" name="apellido" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="crear-dni" class="form-label">DNI</label>
+                    <input type="text" class="form-control" id="crear-dni" name="dni" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="crear-rol" class="form-label">Rol</label>
+                    <select class="form-select" id="crear-rol" name="role" required>
+                        <option value="USER">Usuario</option>
+                        <option value="ADMIN">Administrador</option>
+                    </select>
+                </div>
             </div>
             <div class="mb-3">
-                <label class="form-label">Apellido</label>
-                <input type="text" class="form-control" id="apellido" name="apellido" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">DNI</label>
-                <input type="text" class="form-control" id="dni" name="dni" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Contraseña</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+                <label for="crear-password" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="crear-password" name="password" required>
             </div>
             <button type="submit" class="btn btn-primary w-100">Crear Usuario</button>
         </form>
@@ -40,6 +52,8 @@
                     <th>DNI</th>
                     <th>Nombre</th>
                     <th>Apellido</th>
+                    <th>Rol</th>
+                    <th class="text-end">Acciones</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -55,8 +69,7 @@
                 </div>
                 <div class="modal-body">
                     <form id="formEditarUsuario" novalidate>
-                        <input type="hidden" name="dniOriginal">
-
+                        <input type="hidden" name="idUsuario">
                         <div class="mb-3">
                             <label class="form-label">DNI</label>
                             <input type="text" class="form-control" name="dni" disabled>
@@ -79,7 +92,7 @@
         </div>
     </div>
 
-    <script type="module" src="./assets/js/usuarios.js"></script>
+    <script type="module" src="../assets/js/usuarios.js"></script>
 </body>
 
 </html>

@@ -1,127 +1,95 @@
-// assets/js/api.js
-const API_BASE = "http://localhost:8080/api"; // Ajustar según tu back
+import { getToken, logout } from './auth.js';
 
-// --- Pacientes ---
-// GET /pacientes
-export async function getPacientes() {
-  try {
-    const res = await fetch(`${API_BASE}/pacientes`);
-    if (!res.ok) throw new Error("Error al obtener pacientes");
-    return await res.json();
-  } catch (err) {
-    console.warn("getPacientes: backend unreachable, usando mock", err);
-    return [
-      { id: 1, nombre: "Juan", apellido: "Pérez", dni: "12345678", fechaNacimiento: "1990-06-01", sexo: "M", telefono: "987654321", domicilio: "Calle Luz 123", nroMuestra:"001", centroTx:"Centro A", medicoSolicitante:"Dr. A", antecedentes:{diagnostico:"...", medicacion:"..."}, hla:[], dsa:[], crossmatch:[], trasplantes:[], transfusiones:[] }
-    ];
+const API_BASE = "http://localhost:8080/api";
+
+async function fetchAPI(endpoint, options = {}) {
+  const token = getToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
-}
 
-// POST /pacientes
-export async function crearPaciente(paciente) {
   try {
-    const res = await fetch(`${API_BASE}/pacientes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(paciente)
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(txt || "Error al crear paciente");
+    const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+        logout();
+      }
+      const errorText = await response.text();
+      throw new Error(errorText || `Error en la petición: ${response.status}`);
     }
-    return await res.json();
-  } catch (err) {
-    console.error("crearPaciente:", err);
-    throw err;
-  }
-}
 
-// GET /pacientes/:id
-export async function getPacienteById(id) {
-  try {
-    const res = await fetch(`${API_BASE}/pacientes/${id}`);
-    if (!res.ok) throw new Error("Paciente no encontrado");
-    return await res.json();
-  } catch (err) {
-    console.warn("getPacienteById fallback mock", err);
-    return [
-      { id: 1, nombre: "Juan", apellido: "Pérez", dni: "12345678", fechaNacimiento: "1990-06-01", sexo: "M", telefono: "987654321", domicilio: "Calle Luz 123", nroMuestra:"001", centroTx:"Centro A", medicoSolicitante:"Dr. A", antecedentes:{diagnostico:"...", medicacion:"..."}, hla:[], dsa:[], crossmatch:[], trasplantes:[], transfusiones:[] }
-    ].find(p => p.id == id);
-  }
-}
-
-// --- Usuarios ---
-// POST /usuarios
-export async function crearUsuario(usuario) {
-  try {
-    const res = await fetch(`${API_BASE}/usuarios`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(usuario)
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(txt || "Error al crear usuario");
+    if (response.status === 204) {
+        return { success: true };
     }
-    return await res.json();
+    
+    return await response.json();
   } catch (err) {
-    console.warn("crearUsuario fallback localStorage", err);
-    const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
-    if (usuarios.some(u => u.dni === usuario.dni)) {
-      return Promise.reject("El DNI ya está registrado");
-    }
-    usuarios.push(usuario);
-    localStorage.setItem("usuarios", JSON.stringify(usuarios));
-    return Promise.resolve({ success: true });
-  }
-}
-
-// GET /usuarios
-export async function getUsuarios() {
-  try {
-    const res = await fetch(`${API_BASE}/usuarios`);
-    if (!res.ok) throw new Error("Error al obtener usuarios");
-    return await res.json();
-  } catch (err) {
-    console.warn("getUsuarios fallback localStorage", err);
-    return JSON.parse(localStorage.getItem("usuarios") || "[]");
-  }
-}
-
-// PUT /pacientes/:id
-export async function updatePaciente(id, pacienteData) {
-  try {
-    const res = await fetch(`${API_BASE}/pacientes/${id}`, {
-      method: "PUT", // Usamos PUT para una actualización completa del objeto
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(pacienteData)
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(txt || "Error al actualizar el paciente");
-    }
-    return await res.json();
-  } catch (err) {
-    console.error("updatePaciente:", err);
+    console.error(`Error en fetchAPI para ${endpoint}:`, err);
     throw err;
   }
 }
 
 // --- Autenticación ---
-// POST /api/auth/login (o como lo llames en tu backend)
 export async function loginAPI(dni, password) {
-  try {
-    const res = await fetch(`${API_BASE}/auth/login`, { // Asegúrate de que la URL sea la correcta
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+  const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ dni, password })
-    });
-    if (!res.ok) {
-      throw new Error("DNI o contraseña incorrectos");
-    }
-    // El backend debería devolver un objeto con un token, ej: { "token": "ey..." }
-    return await res.json(); 
-  } catch (err) {
-    console.error("loginAPI:", err);
-    throw err;
+  });
+  if (!response.ok) {
+      throw new Error("Credenciales inválidas");
   }
+  return response.json();
+}
+
+export async function registerAPI(usuario) {
+    const response = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(usuario)
+    });
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Error al registrar usuario");
+    }
+    return response.json();
+}
+
+// --- Pacientes ---
+export function getPacientes() { return fetchAPI('/pacientes'); }
+export function getPacienteById(id) { return fetchAPI(`/pacientes/${id}`); }
+export function crearPaciente(paciente) { return fetchAPI('/pacientes', { method: 'POST', body: JSON.stringify(paciente) }); }
+export function updatePaciente(id, pacienteData) { return fetchAPI(`/pacientes/${id}`, { method: 'PUT', body: JSON.stringify(pacienteData) }); }
+
+// --- Usuarios ---
+export function getUsuariosAPI() {
+  return fetchAPI('/usuarios');
+}
+
+export function deleteUsuarioAPI(id) {
+  return fetchAPI(`/usuarios/${id}`, { method: 'DELETE' });
+}
+
+// --- NUEVA FUNCIÓN PARA ACTUALIZAR USUARIO ---
+export function updateUsuarioAPI(id, datosUsuario) {
+  return fetchAPI(`/usuarios/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(datosUsuario)
+  });
+}
+
+// --- NUEVA FUNCIÓN PARA CAMBIAR CONTRASEÑA ---
+export function changePasswordAPI(datosPassword) {
+  // Asumiendo que el backend tiene un endpoint como '/auth/change-password'
+  return fetchAPI('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify(datosPassword)
+  });
 }

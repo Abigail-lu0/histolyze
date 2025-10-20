@@ -8,4 +8,6 @@ public interface UsuarioService {
     Usuario cambiarClave(Long idUsuario, String nuevaClave);
     List<Usuario> listarUsuarios();
     Usuario buscarPorDni(String dni);
+    Usuario actualizarUsuario(Long id, Usuario datosActualizados);
+    void eliminarUsuario(Long id);
 }

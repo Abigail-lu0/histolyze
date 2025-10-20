@@ -4,9 +4,20 @@ import { loadModuleAndInit, resetToHomeView } from './sidebar.js'; // Reutilizam
 export function renderNavbarUsuario() {
     const usuario = getUsuarioLogueado();
     const userMenuBtn = document.getElementById('userMenu');
+    const navLinkUsuarios = document.getElementById('nav-link-usuarios');
 
     if (usuario && userMenuBtn) {
         userMenuBtn.textContent = `${usuario.nombre} ${usuario.apellido}`;
+    }
+
+    if (navLinkUsuarios) {
+        if (usuario && usuario.role === 'ADMIN') {
+            // Si es ADMIN, nos aseguramos de que el enlace sea visible
+            navLinkUsuarios.style.display = 'block'; // O 'list-item', etc.
+        } else {
+            // Si NO es ADMIN (o no está logueado), lo ocultamos
+            navLinkUsuarios.style.display = 'none';
+        }
     }
 }
 
