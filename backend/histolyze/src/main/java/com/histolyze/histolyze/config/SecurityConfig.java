@@ -34,19 +34,22 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Permite TODAS las peticiones OPTIONS (esencial para CORS preflight)
+                        // Rutas Públicas: solo para login y registro
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Permite el acceso a los endpoints de autenticación
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // --- CAMBIO CLAVE AQUÍ ---
-                        // En lugar de una regla genérica, especifica los métodos
-                        .requestMatchers(HttpMethod.GET, "/api/usuarios", "/api/usuarios/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasAuthority("ROLE_ADMIN")
+                        // Rutas de Administración: solo para usuarios con rol ADMIN
+                        .requestMatchers("/api/usuarios/**").hasAuthority("ROLE_ADMIN")
 
-                        // Cualquier otra petición requiere autenticación
+                        // Rutas de Pacientes y Datos Clínicos: para cualquier usuario autenticado
+                        .requestMatchers(
+                                "/api/pacientes/**",
+                                "/api/antecedentes/**",
+                                "/api/dsa/**",
+                                "/api/anticuerpos/**"
+                        ).authenticated()
+
+                        // Cualquier otra ruta no definida explícitamente requiere autenticación
                         .anyRequest().authenticated()
                 )
                 // ¡CAMBIO CLAVE! Conectamos el proveedor de autenticación a la cadena de seguridad.

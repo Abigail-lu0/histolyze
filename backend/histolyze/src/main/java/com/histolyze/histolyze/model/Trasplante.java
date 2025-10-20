@@ -11,13 +11,13 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "transplante")
-public class Transplante {
+@Table(name = "trasplante")
+public class Trasplante {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_transplante")
-    private Long idTransplante;
+    @Column(name = "id_plante")
+    private Long idTrasplante;
 
     @Column(nullable = false)
     private LocalDate fecha;
@@ -25,12 +25,12 @@ public class Transplante {
     @Column(name = "hla_donante")
     private String hlaDonante;
 
-    // (un transplante pertenece a un antecedente)
+    // (un trasplante pertenece a un antecedente)
     @ManyToOne
     @JoinColumn(name = "id_antecedente", nullable = false)
     private Antecedente antecedente;
 
-    // Enum para tipo de transplante
+    // Enum para tipo de trasplante
     public enum Tipo {
         CRIOPRECIPITADOS, PLAQUETOFERESIS, PLASMAFERESIS, SEDIMENTO_GLOBULAR
     }
