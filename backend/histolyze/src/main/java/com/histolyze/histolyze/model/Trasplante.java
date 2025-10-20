@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.histolyze.histolyze.model.HlaDonante;
 
 import java.time.LocalDate;
 
@@ -22,12 +24,13 @@ public class Trasplante {
     @Column(nullable = false)
     private LocalDate fecha;
 
-    @Column(name = "hla_donante")
-    private String hlaDonante;
+    @Embedded
+    private HlaDonante hlaDonante;
 
     // (un trasplante pertenece a un antecedente)
     @ManyToOne
     @JoinColumn(name = "id_antecedente", nullable = false)
+    @JsonBackReference
     private Antecedente antecedente;
 
     // Enum para tipo de trasplante

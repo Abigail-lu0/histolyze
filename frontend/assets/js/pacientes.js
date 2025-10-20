@@ -6,13 +6,13 @@ import { initAntecedentesModule } from "./antecedentes.js";
 import { getUsuarioLogueado } from "./auth.js";
 
 function limitarFechas() {
-    const hoy = new Date().toISOString().split('T')[0];
-    const form = document.getElementById("formPaciente");
-    if (form) {
-        form.querySelectorAll('input[type="date"]').forEach(input => {
-            input.max = hoy;
-        });
-    }
+  const hoy = new Date().toISOString().split("T")[0];
+  const form = document.getElementById("formPaciente");
+  if (form) {
+    form.querySelectorAll('input[type="date"]').forEach((input) => {
+      input.max = hoy;
+    });
+  }
 }
 
 export function initPacienteModule() {
@@ -23,8 +23,10 @@ export function initPacienteModule() {
     limitarFechas();
   }
 
-  renderPacientes();
-  initSearchInputs();
+  if (document.getElementById("pacientesTable")) {
+    renderPacientes();
+    initSearchInputs();
+  }
 }
 
 function initPacienteForm(form) {
@@ -43,43 +45,112 @@ function initPacienteForm(form) {
       return;
     }
 
-    const usuarioLogueado = getUsuarioLogueado();
+    const tuvoEmbarazos =
+      form.querySelector('input[name="embarazos"]:checked')?.value === "si";
+    const tuvoTransfusiones =
+      form.querySelector('input[name="transfusiones"]:checked')?.value === "si";
+    const tuvoTrasplantes =
+      form.querySelector('input[name="trasplantes"]:checked')?.value === "si";
+    // Lista de Transfusiones
+    const transfusionesList = [];
+    // Si el usuario marcó "sí" y completó la fecha...
+    if (tuvoTransfusiones && form.fechaTransfusiones.value) {
+      // Creamos un objeto Transfusion y lo añadimos a la lista
+      transfusionesList.push({
+        fecha: form.fechaTransfusiones.value,
+      });
+    }
 
-    // Objeto 'paciente' con el 'antecedente' anidado, tal como lo define tu modelo de datos.
-    const paciente = {
-      // Datos que pertenecen a la tabla Paciente
+    // Lista de Trasplantes
+    const trasplantesList = [];
+    if (tuvoTrasplantes && form.fechaTrasplante.value) {
+      // Creamos el objeto complejo HLA aquí
+      const hlaDonanteObjeto = {
+        a1: form.hlaA1.value,
+        a2: form.hlaA2.value,
+        b1: form.hlaB1.value,
+        b2: form.hlaB2.value,
+        c1: form.hlaC1.value,
+        c2: form.hlaC2.value,
+        dr1: form.hlaDR1.value,
+        dr2: form.hlaDR2.value,
+        dqa1_1: form.hlaDQA11.value,
+        dqa1_2: form.hlaDQA12.value,
+        dqb1_1: form.hlaDQB11.value,
+        dqb1_2: form.hlaDQB12.value,
+        dpa1_1: form.hlaDPA11.value,
+        dpa1_2: form.hlaDPA12.value,
+        dpb1_1: form.hlaDPB11.value,
+        dpb1_2: form.hlaDPB12.value,
+      };
+
+      trasplantesList.push({
+        fecha: form.fechaTrasplante.value,
+        tipo: form.tipoTrasplante.value,
+        hlaDonante: hlaDonanteObjeto,
+      });
+    } // 3. Construir el payload final con la ESTRUCTURA CORRECTA
+
+    const payload = {
+      // Datos del Paciente
       nombre: form.nombre.value,
       apellido: form.apellido.value,
+      numeroMuestra: form.muestra.value, // Asegúrate que el name="muestra" es correcto
       dni: form.dni.value,
       fechaNacimiento: form.fechaNacimiento.value,
-      telefono: form.telefono.value,
       domicilio: form.domicilio.value,
-      numMuestra: form.muestra.value,
+      telefono: form.telefono.value,
       mutual: form.mutual.value,
       centroTx: form.tx.value,
       centroDialisis: form.dialisis.value,
-      medicoSolicitante: form.medico.value,
-      creadoPor: usuarioLogueado
-        ? `${usuarioLogueado.nombre} ${usuarioLogueado.apellido}`
-        : "Sistema",
+      medicoSolicitante: form.medico.value, // Array de Antecedentes (aunque sea solo uno)
 
-      // Objeto anidado que se guardará en la tabla Antecedente.
-      // Se envía como un array porque un paciente puede tener más de uno a futuro.
       antecedentes: [
         {
+          // Campos de la entidad Antecedente
           diagnostico: form.diagnostico.value,
           medicacion: form.medicacion.value,
-          embarazos: form.cantidadEmbarazos.value || 0,
-          // Los arrays de transfusiones y trasplantes se inicializan vacíos dentro del antecedente.
-          transfusiones: [],
-          trasplantes: [],
+          fechaComienzoHemodialisis: form.fechaHemodialisis.value,
+          embarazos: tuvoEmbarazos,
+          cantidadEmbarazos: tuvoEmbarazos
+            ? form.cantidadEmbarazos.value || 0
+            : 0,
+          // --- NOMBRES DE CAMPOS CORREGIDOS ---
+          tuvoTransfusiones: tuvoTransfusiones, // <-- CAMPO BOOLEANO RENOMBRADO
+          fechaTransfusiones: form.fechaTransfusiones.value, // Este campo SÍ existe en Antecedente
+          procesoDonacion: form.pdTransfusiones.value,
+          tuvoTrasplantesPrevios: tuvoTrasplantes, // <-- CAMPO BOOLEANO RENOMBRADO
+          grupoSanguineo: form.grupoSanguineo.value, // Objeto anidado para el HLA (embebido en Antecedente)
+          hlaDonante: {
+            a1: form.hlaA1.value,
+            a2: form.hlaA2.value,
+            b1: form.hlaB1.value,
+            b2: form.hlaB2.value,
+            c1: form.hlaC1.value,
+            c2: form.hlaC2.value,
+            dr1: form.hlaDR1.value,
+            dr2: form.hlaDR2.value,
+            dqa1_1: form.hlaDQA11.value,
+            dqa1_2: form.hlaDQA12.value,
+            dqb1_1: form.hlaDQB11.value,
+            dqb1_2: form.hlaDQB12.value,
+            dpa1_1: form.hlaDPA11.value,
+            dpa1_2: form.hlaDPA12.value,
+            dpb1_1: form.hlaDPB11.value,
+            dpb1_2: form.hlaDPB12.value,
+          }, // --- LAS LISTAS QUE FALTABAN ---
+
+          listaTransfusiones: transfusionesList,
+          listaTrasplantes: trasplantesList,
         },
       ],
-    };
+    }; // --- FIN DE LA SECCIÓN MODIFICADA ---
+
+    // console.log("Payload a enviar:", JSON.stringify(payload, null, 2)); // Descomenta esto para depurar
 
     try {
       showLoader();
-      await crearPaciente(paciente);
+      await crearPaciente(payload); // Usamos la función de api.js
       hideLoader();
       showAlert(
         "Paciente guardado correctamente",
@@ -89,13 +160,27 @@ function initPacienteForm(form) {
       );
       form.reset();
       form.classList.remove("was-validated");
+      setTimeout(() => loadModuleAndInit("pacientes_historial"), 1500);
     } catch (err) {
       hideLoader();
-      console.error("Error al guardar el paciente:", err);
-      showAlert("Error al guardar el paciente", "danger", 3000, "formAlerts");
+      console.error(
+        "Error al guardar el paciente:",
+        err.response ? err.response.data : err.message
+      );
+      showAlert(
+        err.response?.data?.message ||
+          err.message ||
+          "Error al guardar el paciente",
+        "danger",
+        3000,
+        "formAlerts"
+      );
     }
   });
 }
+/**
+ * FIN DE LA FUNCIÓN MODIFICADA
+ */
 
 function initSearchInputs() {
   const searchDni = document.getElementById("searchDni");
@@ -125,25 +210,44 @@ export async function renderPacientes() {
       .filter(
         (p) =>
           (!dniFilter || p.dni.includes(dniFilter)) &&
-          (!muestraFilter || (p.numMuestra || "").includes(muestraFilter))
+          (!muestraFilter || (p.numeroMuestra || "").includes(muestraFilter))
       )
       .forEach((p) => {
+        // 1. Crear la fila (esto ya lo tenías)
         const tr = document.createElement("tr");
         tr.dataset.id = p.idPaciente;
-        tr.innerHTML = `
-          <td>${p.idPaciente}</td>
-          <td>${p.nombre}</td>
-          <td>${p.apellido}</td>
-          <td>${p.dni}</td>
-          <td>${p.numMuestra || ""}</td>
-          <td>${p.centroTx || ""}</td>
-          <td>${p.medicoSolicitante || ""}</td> <td class="text-end">
-            <button class="btn btn-sm btn-info btn-ver">Ver Perfil</button>
-          </td>
-        `;
-        tr.querySelector(".btn-ver").addEventListener("click", () =>
-          verPerfilPaciente(p.idPaciente)
-        );
+
+        // 2. Función auxiliar para crear celdas de forma segura
+        const createCell = (text) => {
+          const td = document.createElement("td");
+          td.textContent = text || ""; // 
+          return td;
+        };
+
+        // 3. Añadir todas las celdas de datos
+        tr.appendChild(createCell(p.idPaciente));
+        tr.appendChild(createCell(p.nombre));
+        tr.appendChild(createCell(p.apellido));
+        tr.appendChild(createCell(p.dni));
+        tr.appendChild(createCell(p.numeroMuestra));
+        tr.appendChild(createCell(p.centroTx));
+        tr.appendChild(createCell(p.medicoSolicitante));
+
+        // 4. Crear la celda especial de "Acciones"
+        const tdAcciones = document.createElement("td");
+        tdAcciones.classList.add("text-end");
+
+        const btnVer = document.createElement("button");
+        btnVer.classList.add("btn", "btn-sm", "btn-info", "btn-ver");
+        btnVer.textContent = "Ver Perfil";
+
+        // 5. Añadir el listener DIRECTAMENTE al botón
+        btnVer.addEventListener("click", () => verPerfilPaciente(p.idPaciente));
+
+        tdAcciones.appendChild(btnVer);
+        tr.appendChild(tdAcciones);
+
+        // 6. Añadir la fila completa y segura al tbody
         tbody.appendChild(tr);
       });
   } catch (err) {
@@ -154,4 +258,10 @@ export async function renderPacientes() {
 
 function verPerfilPaciente(pacienteId) {
   loadModuleAndInit("pacientes_detalle", pacienteId);
+}
+
+// Esta función es un punto de entrada útil para la vista de historial.
+export function initHistorialPacientes() {
+  renderPacientes();
+  initSearchInputs();
 }

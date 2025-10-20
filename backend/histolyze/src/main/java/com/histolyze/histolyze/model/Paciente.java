@@ -3,6 +3,8 @@ package com.histolyze.histolyze.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import java.util.List;
 
 @Entity
 @Table(name = "paciente")
@@ -34,7 +36,7 @@ public class Paciente {
     private String telefono;
 
     @Column(length = 50)
-    private String numMuestra;
+    private String numeroMuestra;
 
     @Column(length = 150)
     private String centroDialisis;
@@ -55,4 +57,8 @@ public class Paciente {
     @ManyToOne
     @JoinColumn(name = "completado_por")
     private Usuario completadoPor;  // referencia a la entidad Usuario
+
+    @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference // Ayuda a evitar bucles infinitos al convertir a JSON
+    private List<Antecedente> antecedentes;
 }

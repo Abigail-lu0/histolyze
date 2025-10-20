@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Data
@@ -24,5 +25,7 @@ public class Transfusion {
     // (una transfusion pertenece a un antecedente)
     @ManyToOne
     @JoinColumn(name = "id_antecedente", nullable = false)
+    @JsonBackReference
     private Antecedente antecedente;
+
 }

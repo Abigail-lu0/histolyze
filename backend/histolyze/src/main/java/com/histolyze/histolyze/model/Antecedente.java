@@ -1,10 +1,13 @@
 package com.histolyze.histolyze.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Data
@@ -28,30 +31,36 @@ public class Antecedente {
     private Boolean embarazos;
     private Integer cantidadEmbarazos;
 
-    private Boolean transfusiones;
+    private Boolean tuvoTransfusiones;
     private LocalDate fechaTransfusiones;
 
     // Campo PD renombrado para claridad
     @Column(name = "proceso_donacion_transfusiones")
     private String procesoDonacion;
 
-    private Boolean trasplantesPrevios;
+    private Boolean tuvoTrasplantesPrevios;
 
     @Enumerated(EnumType.STRING)
     private GrupoSanguineo grupoSanguineo;
 
-    // --- Embebemos la clase HlaDonante ---
-    @Embedded
-    private HlaDonante hlaDonante;
-
-    // --- Relaciones ---
+    // --- RELACIONES CON PADRES ---
     @ManyToOne
     @JoinColumn(name = "id_paciente", nullable = false)
+    @JsonBackReference
     private Paciente paciente;
 
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
+
+    // --- RELACIONES CON HIJOS (LISTAS) ---
+    @OneToMany(mappedBy = "antecedente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Transfusion> listaTransfusiones;
+
+    @OneToMany(mappedBy = "antecedente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Trasplante> listaTrasplantes;
 
     // --- Enum para Grupo Sanguíneo ---
     public enum GrupoSanguineo {
