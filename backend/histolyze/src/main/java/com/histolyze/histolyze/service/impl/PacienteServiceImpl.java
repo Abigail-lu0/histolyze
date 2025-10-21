@@ -42,7 +42,6 @@ public class PacienteServiceImpl implements PacienteService {
                 antecedente.setPaciente(paciente);
                 antecedente.setUsuario(usuarioActual);
 
-                // --- BLOQUE CORREGIDO ---
                 // Usamos los nuevos nombres de las listas definidos en Antecedente.java
                 if (antecedente.getListaTransfusiones() != null) { // <-- NOMBRE CORREGIDO
                     antecedente.getListaTransfusiones().forEach(transfusion -> { // <-- NOMBRE CORREGIDO
@@ -54,7 +53,6 @@ public class PacienteServiceImpl implements PacienteService {
                         trasplante.setAntecedente(antecedente);
                     });
                 }
-                // --- FIN BLOQUE CORREGIDO ---
             });
         }
 
@@ -62,7 +60,7 @@ public class PacienteServiceImpl implements PacienteService {
     }
 
     @Override
-    public Optional<Paciente> obtenerPacientePorId(Integer id) {
+    public Optional<Paciente> obtenerPacientePorId(Long id) {
         return pacienteRepository.findById(id);
     }
 
@@ -77,7 +75,7 @@ public class PacienteServiceImpl implements PacienteService {
     }
 
     @Override
-    public void eliminarPaciente(Integer id) {
+    public void eliminarPaciente(Long id) {
         pacienteRepository.deleteById(id);
     }
 }

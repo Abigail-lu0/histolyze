@@ -55,7 +55,11 @@ export async function loadModuleAndInit(moduleName, id = null) {
 
         break;
       }
-      // Agrega aquí más casos para tus otros módulos
+      case "carga_hla": {
+        const { initHlaModule } = await import('./hla.js');
+        initHlaModule();
+        break;
+      }
     }
   } catch (err) {
     console.error(`Error al cargar el módulo '${moduleName}':`, err);

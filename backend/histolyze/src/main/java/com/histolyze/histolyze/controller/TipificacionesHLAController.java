@@ -9,38 +9,45 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/tipificaciones_hla")
+@RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:4200")
 public class TipificacionesHLAController {
 
     @Autowired
     private TipificacionesHLAService service;
 
-    @GetMapping
-    public ResponseEntity<List<TipificacionesHLA>> listarTipificaciones() {
-        return ResponseEntity.ok(service.listarTipificaciones());
+    @PostMapping("/pacientes/{idPaciente}/hla")
+    public ResponseEntity<TipificacionesHLA> guardarTipificacion(
+            @PathVariable Long idPaciente,
+            @RequestBody TipificacionesHLA tipificacion) {
+
+        return ResponseEntity.ok(service.guardarTipificacion(tipificacion, idPaciente));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/pacientes/{idPaciente}/hla")
+    public ResponseEntity<List<TipificacionesHLA>> listarTipificacionesPorPaciente(
+            @PathVariable Long idPaciente) {
+
+        return ResponseEntity.ok(service.findByPaciente(idPaciente));
+    }
+
+    @PutMapping("/pacientes/{idPaciente}/hla/{idHla}")
+    public ResponseEntity<TipificacionesHLA> actualizarTipificacion(
+            @PathVariable Long idPaciente,
+            @PathVariable Long idHla,
+            @RequestBody TipificacionesHLA tipificacion) {
+
+        return ResponseEntity.ok(service.actualizarTipificacion(idHla, tipificacion, idPaciente));
+    }
+
+    @GetMapping("/hla/{id}")
     public ResponseEntity<TipificacionesHLA> obtenerPorId(@PathVariable Long id) {
         return service.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<TipificacionesHLA> guardarTipificacion(@RequestBody TipificacionesHLA tipificacion) {
-        return ResponseEntity.ok(service.guardarTipificacion(tipificacion));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<TipificacionesHLA> actualizarTipificacion(@PathVariable Long id,
-                                                                    @RequestBody TipificacionesHLA tipificacion) {
-        tipificacion.setIdHla(id);
-        return ResponseEntity.ok(service.actualizarTipificacion(tipificacion));
-    }
-
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/hla/{id}")
     public ResponseEntity<Void> eliminarTipificacion(@PathVariable Long id) {
         service.eliminarTipificacion(id);
         return ResponseEntity.noContent().build();

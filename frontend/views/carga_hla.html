@@ -1,7 +1,22 @@
-<!-- Contenedor de alertas local para HLA -->
 <div id="formAlertsHLA" class="mb-3"></div>
 
 <form id="formHLA" novalidate>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="pacienteSelectHLA" class="form-label">Paciente</label>
+            <select id="pacienteSelectHLA" class="form-select" required>
+                <option value="" disabled selected>Seleccione un paciente...</option>
+            </select>
+            <div class="invalid-feedback">Debe seleccionar un paciente.</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="numeroMuestraHLA" class="form-label">Número de Muestra</label>
+            <input type="text" class="form-control" id="numeroMuestraHLA" required>
+        </div>
+    </div>
+
     <div class="row mb-3">
         <div class="col-md-4">
             <label for="fechaHLA" class="form-label">Fecha</label>
@@ -10,11 +25,21 @@
         </div>
         <div class="col-md-4">
             <label for="grupoSanguineoHLA" class="form-label">Grupo sanguíneo</label>
-            <input type="text" class="form-control" id="grupoSanguineoHLA" pattern="^(A|B|AB|O)[+-]$" placeholder="Ej: A+, O-">
+            <select class="form-control" id="grupoSanguineoHLA" required>
+                <option selected disabled value="">Seleccionar...</option>
+                <option value="A_POSITIVO">A+</option>
+                <option value="A_NEGATIVO">A-</option>
+                <option value="B_POSITIVO">B+</option>
+                <option value="B_NEGATIVO">B-</option>
+                <option value="AB_POSITIVO">AB+</option>
+                <option value="AB_NEGATIVO">AB-</option>
+                <option value="O_POSITIVO">O+</option>
+                <option value="O_NEGATIVO">O-</option>
+            </select>
+            <div class="invalid-feedback">Seleccione un grupo sanguíneo.</div>
         </div>
     </div>
 
-    <!-- HLA -->
     <div class="row g-2">
         <div class="col-md-3">
             <label class="form-label">A</label>

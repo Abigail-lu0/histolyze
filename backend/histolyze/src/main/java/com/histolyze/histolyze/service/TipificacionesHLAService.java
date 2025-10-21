@@ -6,8 +6,10 @@ import java.util.Optional;
 
 public interface TipificacionesHLAService {
     List<TipificacionesHLA> listarTipificaciones();
+
     Optional<TipificacionesHLA> obtenerPorId(Long id);
-    TipificacionesHLA guardarTipificacion(TipificacionesHLA tipificacion);
-    TipificacionesHLA actualizarTipificacion(TipificacionesHLA tipificacion);
+    TipificacionesHLA guardarTipificacion(TipificacionesHLA tipificacion, Long idPaciente);
+    TipificacionesHLA actualizarTipificacion(Long idHla, TipificacionesHLA tipificacion, Long idPaciente);
     void eliminarTipificacion(Long id);
+    List<TipificacionesHLA> findByPaciente(Long idPaciente);
 }

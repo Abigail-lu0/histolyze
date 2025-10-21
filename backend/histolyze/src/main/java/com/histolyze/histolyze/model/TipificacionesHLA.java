@@ -18,8 +18,8 @@ public class TipificacionesHLA {
     @Column(name = "id_hla")
     private Long idHla;
 
-    @Column(name = "nombre_muestra", nullable = false, length = 150)
-    private String nombreMuestra;
+    @Column(name = "numero_muestra", nullable = false, length = 150)
+    private String numeroMuestra;
 
     @Column(name = "locusA_01", length = 50)
     private String locusA01;
@@ -51,11 +51,23 @@ public class TipificacionesHLA {
     @Column(name = "locusDQA_02", length = 50)
     private String locusDQA02;
 
-    @Column(name = "locusDQ_01", length = 50)
-    private String locusDQ01;
+    @Column(name = "locusDQB_01", length = 50)
+    private String locusDQB01;
 
-    @Column(name = "locusDQ_02", length = 50)
-    private String locusDQ02;
+    @Column(name = "locusDQB_02", length = 50)
+    private String locusDQB02;
+
+    @Column(name = "locusDPA_01", length = 50)
+    private String locusDPA01;
+
+    @Column(name = "locusDPA_02", length = 50)
+    private String locusDPA02;
+
+    @Column(name = "locusDPB_01", length = 50)
+    private String locusDPB01;
+
+    @Column(name = "locusDPB_02", length = 50)
+    private String locusDPB02;
 
     @Column(name = "fecha_registro")
     private LocalDate fechaRegistro;

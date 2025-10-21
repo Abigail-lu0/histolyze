@@ -16,7 +16,7 @@ public class Paciente {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)  // AUTO_INCREMENT en MySQL
-    private Integer idPaciente;
+    private Long idPaciente;
 
     @Column(nullable = false, length = 100)
     private String nombre;

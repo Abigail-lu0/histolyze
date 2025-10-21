@@ -9,11 +9,11 @@ public interface PacienteService {
 
     Paciente guardarPaciente(Paciente paciente);
 
-    Optional<Paciente> obtenerPacientePorId(Integer id);
+    Optional<Paciente> obtenerPacientePorId(Long id);
 
     Optional<Paciente> obtenerPacientePorDni(String dni);
 
     List<Paciente> listarPacientes();
 
-    void eliminarPaciente(Integer id);
+    void eliminarPaciente(Long id);
 }

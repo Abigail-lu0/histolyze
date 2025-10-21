@@ -4,7 +4,6 @@ import { initSidebarLinks } from "./sidebar.js";
 import { initNavbar } from "./navbar.js";
 import { initPacienteModule } from "./pacientes.js";
 import { initUsuarioModule } from "./usuarios.js";
-import { initHlaModule } from "./hla.js";
 import { initAnticuerposModule } from "./anticuerpos.js";
 import { initAntecedentesModule } from "./antecedentes.js";
 import { initModal } from "./modal.js";

@@ -29,7 +29,7 @@ public class PacienteController {
 
     // Obtener paciente por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Paciente> obtenerPacientePorId(@PathVariable Integer id) {
+    public ResponseEntity<Paciente> obtenerPacientePorId(@PathVariable Long id) {
         Optional<Paciente> pacienteOpt = pacienteService.obtenerPacientePorId(id);
         return pacienteOpt.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -51,7 +51,7 @@ public class PacienteController {
 
     // Actualizar paciente existente
     @PutMapping("/{id}")
-    public ResponseEntity<Paciente> actualizarPaciente(@PathVariable Integer id, @RequestBody Paciente paciente) {
+    public ResponseEntity<Paciente> actualizarPaciente(@PathVariable Long id, @RequestBody Paciente paciente) {
         Optional<Paciente> pacienteOpt = pacienteService.obtenerPacientePorId(id);
         if (pacienteOpt.isPresent()) {
             paciente.setIdPaciente(id);
@@ -63,7 +63,7 @@ public class PacienteController {
 
     // Eliminar paciente
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarPaciente(@PathVariable Integer id) {
+    public ResponseEntity<Void> eliminarPaciente(@PathVariable Long id) {
         Optional<Paciente> pacienteOpt = pacienteService.obtenerPacientePorId(id);
         if (pacienteOpt.isPresent()) {
             pacienteService.eliminarPaciente(id);
