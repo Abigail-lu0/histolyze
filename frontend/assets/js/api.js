@@ -68,6 +68,22 @@ export function getPacienteById(id) { return fetchAPI(`/pacientes/${id}`); }
 export function crearPaciente(paciente) { return fetchAPI('/pacientes', { method: 'POST', body: JSON.stringify(paciente) }); }
 export function updatePaciente(id, pacienteData) { return fetchAPI(`/pacientes/${id}`, { method: 'PUT', body: JSON.stringify(pacienteData) }); }
 
+// --- HLA ---
+export function guardarHlaAPI(idPaciente, hlaData) {
+  return fetchAPI(`/pacientes/${idPaciente}/hla`, {
+    method: 'POST',
+    body: JSON.stringify(hlaData)
+  });
+}
+
+// --- Crossmatch ---
+export function guardarCrossmatchAPI(idPaciente, crossmatchData) {
+  return fetchAPI(`/pacientes/${idPaciente}/crossmatch`, {
+    method: 'POST',
+    body: JSON.stringify(crossmatchData)
+  });
+}
+
 // --- Usuarios ---
 export function getUsuariosAPI() {
   return fetchAPI('/usuarios');

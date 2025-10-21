@@ -60,6 +60,11 @@ export async function loadModuleAndInit(moduleName, id = null) {
         initHlaModule();
         break;
       }
+      case "carga_crossmatch_panel": {
+        const { initCrossmatchModule } = await import('./crossmatch_panel.js');
+        initCrossmatchModule();
+        break;
+      }
     }
   } catch (err) {
     console.error(`Error al cargar el módulo '${moduleName}':`, err);

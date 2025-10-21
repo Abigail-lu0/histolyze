@@ -1,4 +1,4 @@
-import { getPacientes } from "./api.js";
+import { getPacientes, guardarHlaAPI } from "./api.js";
 import { showAlert } from "./alerts.js";
 import { showLoader, hideLoader } from "./loader.js";
 
@@ -135,23 +135,5 @@ export function initHlaModule() {
 
 // Envía la tipificación HLA a la API para guardarla.
 async function guardarHLA(idPaciente, hlaData) {
-  // Usamos el endpoint del Controller: /api/pacientes/{id}/hla
-  const url = `/api/pacientes/${idPaciente}/hla`;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(hlaData),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.message || `Error del servidor: ${response.statusText}`
-    );
-  }
-
-  return response.json();
+  return guardarHlaAPI(idPaciente, hlaData);
 }

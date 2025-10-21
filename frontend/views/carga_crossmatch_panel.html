@@ -1,29 +1,38 @@
-<!-- Contenedor de alertas local para Crossmatch -->
-<div id="formAlertsDSA" class="mb-3"></div>
+<div id="formAlertsCrossmatch" class="mb-3"></div>
 
-<form id="formAnticuerpos" novalidate>
+<form id="formCrossmatch" novalidate>
+    
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="pacienteSelectCrossmatch" class="form-label">Paciente</label>
+            <select id="pacienteSelectCrossmatch" class="form-select" required>
+                <option value="" disabled selected>Seleccione un paciente...</option>
+                </select>
+            <div class="invalid-feedback">Debe seleccionar un paciente.</div>
+        </div>
+        
+        <div class="col-md-3">
+            <label for="numeroMuestraCrossmatch" class="form-label">Número de Muestra</label>
+            <input type="text" class="form-control" id="numeroMuestraCrossmatch" name="numeroMuestraCrossmatch" required pattern="^[0-9]+$" readonly>
+        </div>
+    </div>
+    
     <div class="row mb-3">
         <div class="col-md-3">
-            <label for="fechaAnticuerpos" class="form-label">Fecha</label>
-            <input type="date" class="form-control" id="fechaAnticuerpos" name="fechaAnticuerpos" required>
+            <label for="fecha" class="form-label">Fecha</label>
+            <input type="date" class="form-control" id="fecha" name="fecha" required>
             <div class="invalid-feedback">Seleccione una fecha.</div>
         </div>
 
-        <div class="col-md-3">
-            <label for="numeroAnticuerpos" class="form-label">Nº</label>
-            <input type="text" class="form-control" id="numeroAnticuerpos" name="numeroAnticuerpos" required pattern="^[0-9]+$">
-            <div class="invalid-feedback">Ingrese un número válido.</div>
-        </div>
-
         <div class="col-md-2">
-            <label for="antiHlaI" class="form-label">Anti-HLA I (%)</label>
-            <input type="number" class="form-control" id="antiHlaI" name="antiHlaI" min="0" max="100" placeholder="%" required>
+            <label for="antiHla1" class="form-label">Anti-HLA I (%)</label>
+            <input type="number" class="form-control" id="antiHla1" name="antiHla1" min="0" max="100" placeholder="%" required>
             <div class="invalid-feedback">Ingrese un valor entre 0 y 100.</div>
         </div>
 
         <div class="col-md-2">
-            <label for="antiHlaII" class="form-label">Anti-HLA II (%)</label>
-            <input type="number" class="form-control" id="antiHlaII" name="antiHlaII" min="0" max="100" placeholder="%" required>
+            <label for="antiHla2" class="form-label">Anti-HLA II (%)</label>
+            <input type="number" class="form-control" id="antiHla2" name="antiHla2" min="0" max="100" placeholder="%" required>
             <div class="invalid-feedback">Ingrese un valor entre 0 y 100.</div>
         </div>
 

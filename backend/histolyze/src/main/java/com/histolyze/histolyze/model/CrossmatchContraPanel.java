@@ -21,17 +21,20 @@ public class CrossmatchContraPanel {
     @Column(nullable = false)
     private LocalDate fecha;
 
-    @Column(name = "anti_hla_1", length = 255)
-    private String antiHla1;
+    @Column(name = "numero_muestra", length = 150)
+    private String numeroMuestra;
 
-    @Column(name = "anti_hla_2", length = 255)
-    private String antiHla2;
+    @Column(name = "anti_hla_1")
+    private Integer antiHla1;
 
-    @Column(name = "anti_mica", length = 255)
-    private String antiMica;
+    @Column(name = "anti_hla_2")
+    private Integer antiHla2;
 
-    @Column(name = "anticuerpos_especificos", length = 255)
-    private String anticuerposEspecificos;
+    @Column(name = "anti_mica")
+    private Integer antiMica;
+
+    @Column(name = "anticuerpos_no_confirmados", length = 255)
+    private String anticuerposNoConfirmados;
 
     // Relación con Paciente
     @ManyToOne
