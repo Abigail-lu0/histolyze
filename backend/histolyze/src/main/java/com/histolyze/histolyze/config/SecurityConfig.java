@@ -38,6 +38,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        // Permitimos nuestro endpoint de prueba para subir archivos
+                        .requestMatchers("/api/reports/**").permitAll()
+
                         // Rutas de Administración: solo para usuarios con rol ADMIN
                         .requestMatchers("/api/usuarios/**").hasAuthority("ROLE_ADMIN")
 
