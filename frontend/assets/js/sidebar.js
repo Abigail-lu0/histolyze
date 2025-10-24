@@ -65,6 +65,11 @@ export async function loadModuleAndInit(moduleName, id = null) {
         initCrossmatchModule();
         break;
       }
+      case "carga_dsa": {
+        const { initCargaDsaModule } = await import('./carga_dsa.js');
+        initCargaDsaModule();
+        break;
+      }
     }
   } catch (err) {
     console.error(`Error al cargar el módulo '${moduleName}':`, err);

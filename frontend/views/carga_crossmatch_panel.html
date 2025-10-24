@@ -1,53 +1,77 @@
-<div id="formAlertsCrossmatch" class="mb-3"></div>
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Carga de crossmatch contra panel</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+        <li class="breadcrumb-item active">Carga de Reportes</li>
+        <li class="breadcrumb-item active">Carga Crossmatch</li>
+    </ol>
 
-<form id="formCrossmatch" novalidate>
-    
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label for="pacienteSelectCrossmatch" class="form-label">Paciente</label>
-            <select id="pacienteSelectCrossmatch" class="form-select" required>
-                <option value="" disabled selected>Seleccione un paciente...</option>
-                </select>
-            <div class="invalid-feedback">Debe seleccionar un paciente.</div>
+    <!-- Contenedor de la tarjeta principal -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-vial me-1"></i>
+            Cargar datos
         </div>
-        
-        <div class="col-md-3">
-            <label for="numeroMuestraCrossmatch" class="form-label">Número de Muestra</label>
-            <input type="text" class="form-control" id="numeroMuestraCrossmatch" name="numeroMuestraCrossmatch" required pattern="^[0-9]+$" readonly>
+        <div class="card-body">
+            <div id="formAlertsCrossmatch" class="mb-3"></div>
+
+            <form id="formCrossmatch" novalidate>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="pacienteSelectCrossmatch" class="form-label">Paciente</label>
+                        <select id="pacienteSelectCrossmatch" class="form-select" required>
+                            <option value="" disabled selected>Seleccione un paciente...</option>
+                        </select>
+                        <div class="invalid-feedback">Debe seleccionar un paciente.</div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="numeroMuestraCrossmatch" class="form-label">Número de Muestra</label>
+                        <input type="text" class="form-control" id="numeroMuestraCrossmatch"
+                            name="numeroMuestraCrossmatch" required pattern="^[0-9]+$" readonly>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="fecha" class="form-label">Fecha</label>
+                        <input type="date" class="form-control" id="fecha" name="fecha" required>
+                        <div class="invalid-feedback">Seleccione una fecha.</div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="antiHla1" class="form-label">Anti-HLA I (%)</label>
+                        <input type="number" class="form-control" id="antiHla1" name="antiHla1" min="0" max="100"
+                            placeholder="%" required>
+                        <div class="invalid-feedback">Ingrese un valor entre 0 y 100.</div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="antiHla2" class="form-label">Anti-HLA II (%)</label>
+                        <input type="number" class="form-control" id="antiHla2" name="antiHla2" min="0" max="100"
+                            placeholder="%" required>
+                        <div class="invalid-feedback">Ingrese un valor entre 0 y 100.</div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="antiMica" class="form-label">Anti MICA (%)</label>
+                        <input type="number" class="form-control" id="antiMica" name="antiMica" min="0" max="100"
+                            placeholder="%" required>
+                        <div class="invalid-feedback">Ingrese un valor entre 0 y 100.</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="anticuerposNoConfirmados" class="form-label">Anticuerpos Específicos no
+                        Confirmados</label>
+                    <textarea class="form-control" id="anticuerposNoConfirmados" name="anticuerposNoConfirmados"
+                        rows="3" placeholder="Describa los anticuerpos no confirmados..." required></textarea>
+                    <div class="invalid-feedback">Complete este campo.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </form>
         </div>
     </div>
-    
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <label for="fecha" class="form-label">Fecha</label>
-            <input type="date" class="form-control" id="fecha" name="fecha" required>
-            <div class="invalid-feedback">Seleccione una fecha.</div>
-        </div>
-
-        <div class="col-md-2">
-            <label for="antiHla1" class="form-label">Anti-HLA I (%)</label>
-            <input type="number" class="form-control" id="antiHla1" name="antiHla1" min="0" max="100" placeholder="%" required>
-            <div class="invalid-feedback">Ingrese un valor entre 0 y 100.</div>
-        </div>
-
-        <div class="col-md-2">
-            <label for="antiHla2" class="form-label">Anti-HLA II (%)</label>
-            <input type="number" class="form-control" id="antiHla2" name="antiHla2" min="0" max="100" placeholder="%" required>
-            <div class="invalid-feedback">Ingrese un valor entre 0 y 100.</div>
-        </div>
-
-        <div class="col-md-2">
-            <label for="antiMica" class="form-label">Anti MICA (%)</label>
-            <input type="number" class="form-control" id="antiMica" name="antiMica" min="0" max="100" placeholder="%" required>
-            <div class="invalid-feedback">Ingrese un valor entre 0 y 100.</div>
-        </div>
-    </div>
-
-    <div class="mb-3">
-        <label for="anticuerposNoConfirmados" class="form-label">Anticuerpos Específicos no Confirmados</label>
-        <textarea class="form-control" id="anticuerposNoConfirmados" name="anticuerposNoConfirmados" rows="3" placeholder="Describa los anticuerpos no confirmados..." required></textarea>
-        <div class="invalid-feedback">Complete este campo.</div>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Guardar</button>
-</form>
+</div>

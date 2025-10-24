@@ -36,6 +36,41 @@ async function fetchAPI(endpoint, options = {}) {
   }
 }
 
+export async function uploadFileAPI(endpoint, formData) {
+  const token = getToken();
+  const headers = {
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      body: formData, // Enviamos el FormData
+      headers: headers,
+    });
+
+    // Leemos la respuesta como TEXTO
+    const responseText = await response.text();
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+        logout();
+      }
+      throw new Error(responseText || `Error en la petición: ${response.status}`);
+    }
+    
+    return responseText;
+
+  } catch (err) {
+    console.error(`Error en uploadFileAPI para ${endpoint}:`, err);
+    throw err;
+  }
+}
+
 // --- Autenticación ---
 export async function loginAPI(dni, password) {
   const response = await fetch(`${API_BASE}/auth/login`, {
@@ -93,7 +128,6 @@ export function deleteUsuarioAPI(id) {
   return fetchAPI(`/usuarios/${id}`, { method: 'DELETE' });
 }
 
-// --- NUEVA FUNCIÓN PARA ACTUALIZAR USUARIO ---
 export function updateUsuarioAPI(id, datosUsuario) {
   return fetchAPI(`/usuarios/${id}`, {
     method: 'PUT',
@@ -101,9 +135,7 @@ export function updateUsuarioAPI(id, datosUsuario) {
   });
 }
 
-// --- NUEVA FUNCIÓN PARA CAMBIAR CONTRASEÑA ---
 export function changePasswordAPI(datosPassword) {
-  // Asumiendo que el backend tiene un endpoint como '/auth/change-password'
   return fetchAPI('/auth/change-password', {
     method: 'POST',
     body: JSON.stringify(datosPassword)
