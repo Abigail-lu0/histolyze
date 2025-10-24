@@ -1,5 +1,7 @@
 package com.histolyze.histolyze.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -35,6 +37,7 @@ public class DSA {
     // Relación con Paciente
     @ManyToOne
     @JoinColumn(name = "id_paciente", nullable = false)
+    @JsonBackReference
     private Paciente paciente;
 }
 

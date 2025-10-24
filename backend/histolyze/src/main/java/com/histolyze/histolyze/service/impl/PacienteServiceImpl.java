@@ -1,5 +1,6 @@
 package com.histolyze.histolyze.service.impl;
 
+import com.histolyze.histolyze.model.Antecedente;
 import com.histolyze.histolyze.model.Paciente;
 import com.histolyze.histolyze.model.Usuario;
 import com.histolyze.histolyze.repository.UsuarioRepository;
@@ -28,7 +29,6 @@ public class PacienteServiceImpl implements PacienteService {
     @Override
     @Transactional
     public Paciente guardarPaciente(Paciente paciente) {
-        // --- AUDITORÍA ---
         String usuarioDni = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Usuario usuarioActual = usuarioRepository.findByDni(usuarioDni)
@@ -36,24 +36,35 @@ public class PacienteServiceImpl implements PacienteService {
 
         paciente.setCreadoPor(usuarioActual);
 
-        // --- ASIGNACIÓN DE RELACIONES EN CASCADA ---
-        if (paciente.getAntecedentes() != null) {
-            paciente.getAntecedentes().forEach(antecedente -> {
+        List<Antecedente> antecedentes = paciente.getAntecedentes();
+
+        if (antecedentes != null && !antecedentes.isEmpty()) {
+            antecedentes.forEach(antecedente -> {
                 antecedente.setPaciente(paciente);
                 antecedente.setUsuario(usuarioActual);
 
-                // Usamos los nuevos nombres de las listas definidos en Antecedente.java
-                if (antecedente.getListaTransfusiones() != null) { // <-- NOMBRE CORREGIDO
-                    antecedente.getListaTransfusiones().forEach(transfusion -> { // <-- NOMBRE CORREGIDO
+                // Iteramos sobre las listas DENTRO de CADA antecedente
+                if (antecedente.getListaTransfusiones() != null) {
+                    antecedente.getListaTransfusiones().forEach(transfusion -> {
                         transfusion.setAntecedente(antecedente);
                     });
                 }
-                if (antecedente.getListaTrasplantes() != null) { // <-- NOMBRE CORREGIDO
-                    antecedente.getListaTrasplantes().forEach(trasplante -> { // <-- NOMBRE CORREGIDO
+                if (antecedente.getListaTrasplantes() != null) {
+                    antecedente.getListaTrasplantes().forEach(trasplante -> {
                         trasplante.setAntecedente(antecedente);
                     });
                 }
             });
+        }
+
+        if (paciente.getTipificacionesHLA() != null) {
+            paciente.getTipificacionesHLA().forEach(hla -> hla.setPaciente(paciente));
+        }
+        if (paciente.getDsa() != null) {
+            paciente.getDsa().forEach(d -> d.setPaciente(paciente));
+        }
+        if (paciente.getCrossmatchContraPanel() != null) {
+            paciente.getCrossmatchContraPanel().forEach(c -> c.setPaciente(paciente));
         }
 
         return pacienteRepository.save(paciente);
@@ -79,3 +90,4 @@ public class PacienteServiceImpl implements PacienteService {
         pacienteRepository.deleteById(id);
     }
 }
+

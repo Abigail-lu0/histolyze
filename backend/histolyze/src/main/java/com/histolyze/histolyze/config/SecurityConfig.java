@@ -44,6 +44,8 @@ public class SecurityConfig {
                         // Rutas de Administración: solo para usuarios con rol ADMIN
                         .requestMatchers("/api/usuarios/**").hasAuthority("ROLE_ADMIN")
 
+                        .requestMatchers(HttpMethod.PUT, "/api/pacientes/**").hasAnyRole("USER", "ADMIN")
+
                         // Rutas de Pacientes y Datos Clínicos: para cualquier usuario autenticado
                         .requestMatchers(
                                 "/api/pacientes/**",

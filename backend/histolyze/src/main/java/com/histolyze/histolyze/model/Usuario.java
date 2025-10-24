@@ -1,5 +1,6 @@
 package com.histolyze.histolyze.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,7 +14,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Usuario implements UserDetails { // <-- ¡LA CLAVE ESTÁ AQUÍ!
+public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,7 +23,6 @@ public class Usuario implements UserDetails { // <-- ¡LA CLAVE ESTÁ AQUÍ!
     @Column(nullable = false)
     private String nombre;
 
-    // Tu compañera añadió 'apellido' en el backend, asegúrate de tenerlo
     @Column(nullable = false)
     private String apellido;
 
@@ -30,6 +30,7 @@ public class Usuario implements UserDetails { // <-- ¡LA CLAVE ESTÁ AQUÍ!
     private String dni;
 
     @Column(name = "contrasena", nullable = false)
+    @JsonIgnore // No enviar la contraseña en el JSON
     private String password;
 
     public enum Rol {
@@ -44,26 +45,29 @@ public class Usuario implements UserDetails { // <-- ¡LA CLAVE ESTÁ AQUÍ!
     // --- MÉTODOS REQUERIDOS POR UserDetails ---
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Convertimos nuestro Rol a un formato que Spring Security entiende
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
     public String getUsername() {
-        // Usamos el DNI como el "nombre de usuario" para el login
         return this.dni;
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonExpired() { return true; }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonLocked() { return true; }
 
     @Override
+    @JsonIgnore
     public boolean isCredentialsNonExpired() { return true; }
 
     @Override
+    @JsonIgnore
     public boolean isEnabled() { return true; }
 }

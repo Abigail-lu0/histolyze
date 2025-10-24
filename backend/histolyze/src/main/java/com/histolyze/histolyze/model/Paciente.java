@@ -8,14 +8,17 @@ import java.util.List;
 
 @Entity
 @Table(name = "paciente")
-@Data           // Genera getters, setters, toString, equals y hashCode automáticamente
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder        // Permite usar el patrón builder para crear objetos
+@Builder
+@EqualsAndHashCode(of = {"idPaciente", "dni"})
+@ToString(exclude = {"antecedentes", "tipificacionesHLA", "dsa", "crossmatchContraPanel", "creadoPor", "completadoPor"})
 public class Paciente {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  // AUTO_INCREMENT en MySQL
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idPaciente;
 
     @Column(nullable = false, length = 100)
@@ -50,15 +53,29 @@ public class Paciente {
     @Column(length = 100)
     private String medicoSolicitante;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "creado_por", nullable = false)
-    private Usuario creadoPor;      // referencia a la entidad Usuario
+    private Usuario creadoPor;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "completado_por")
-    private Usuario completadoPor;  // referencia a la entidad Usuario
+    private Usuario completadoPor;
 
-    @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference // Ayuda a evitar bucles infinitos al convertir a JSON
+    @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
     private List<Antecedente> antecedentes;
+
+    @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<TipificacionesHLA> tipificacionesHLA;
+
+    @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<DSA> dsa;
+
+    @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<CrossmatchContraPanel> crossmatchContraPanel;
+
 }
+
