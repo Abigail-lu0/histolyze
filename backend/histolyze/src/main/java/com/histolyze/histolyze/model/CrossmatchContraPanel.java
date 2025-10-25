@@ -32,8 +32,14 @@ public class CrossmatchContraPanel {
     @Column(name = "anti_hla_2")
     private Integer antiHla2;
 
-    @Column(name = "anti_mica")
-    private Integer antiMica;
+    // Enum para ANTIMICA
+    public enum Resultado {
+        POSITIVO, NEGATIVO
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Resultado resultado;
 
     @Column(name = "anticuerpos_no_confirmados", length = 255)
     private String anticuerposNoConfirmados;

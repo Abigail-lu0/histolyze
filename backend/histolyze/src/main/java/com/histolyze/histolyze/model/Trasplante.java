@@ -35,7 +35,7 @@ public class Trasplante {
 
     // Enum para tipo de trasplante
     public enum Tipo {
-        CRIOPRECIPITADOS, PLAQUETOFERESIS, PLASMAFERESIS, SEDIMENTO_GLOBULAR
+        DONANTECADAVERICO, DONANTEVIVO
     }
 
     @Enumerated(EnumType.STRING)

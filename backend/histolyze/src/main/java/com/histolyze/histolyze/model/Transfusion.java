@@ -22,6 +22,15 @@ public class Transfusion {
     @Column(nullable = false)
     private LocalDate fecha;
 
+    // Enum para tipo de transfusion
+    public enum Tipo {
+        CRIOPRECIPITADOS, PLAQUETOFERESIS, PLASMAFERESIS, SEDIMENTO_GLOBULAR
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Transfusion.Tipo tipo;
+
     // (una transfusion pertenece a un antecedente)
     @ManyToOne
     @JoinColumn(name = "id_antecedente", nullable = false)

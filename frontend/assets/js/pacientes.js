@@ -58,6 +58,7 @@ function initPacienteForm(form) {
       // Creamos un objeto Transfusion y lo añadimos a la lista
       transfusionesList.push({
         fecha: form.fechaTransfusiones.value,
+        tipo: form.tipoTransfusion.value,
       });
     }
 
@@ -95,7 +96,7 @@ function initPacienteForm(form) {
       // Datos del Paciente
       nombre: form.nombre.value,
       apellido: form.apellido.value,
-      numeroMuestra: form.muestra.value, // Asegúrate que el name="muestra" es correcto
+      numeroMuestra: form.muestra.value,
       dni: form.dni.value,
       fechaNacimiento: form.fechaNacimiento.value,
       domicilio: form.domicilio.value,
@@ -103,11 +104,10 @@ function initPacienteForm(form) {
       mutual: form.mutual.value,
       centroTx: form.tx.value,
       centroDialisis: form.dialisis.value,
-      medicoSolicitante: form.medico.value, // Array de Antecedentes (aunque sea solo uno)
+      medicoSolicitante: form.medico.value,
 
       antecedentes: [
         {
-          // Campos de la entidad Antecedente
           diagnostico: form.diagnostico.value,
           medicacion: form.medicacion.value,
           fechaComienzoHemodialisis: form.fechaHemodialisis.value,
@@ -115,12 +115,11 @@ function initPacienteForm(form) {
           cantidadEmbarazos: tuvoEmbarazos
             ? form.cantidadEmbarazos.value || 0
             : 0,
-          // --- NOMBRES DE CAMPOS CORREGIDOS ---
-          tuvoTransfusiones: tuvoTransfusiones, // <-- CAMPO BOOLEANO RENOMBRADO
-          fechaTransfusiones: form.fechaTransfusiones.value, // Este campo SÍ existe en Antecedente
+          tuvoTransfusiones: tuvoTransfusiones, 
+          fechaTransfusiones: form.fechaTransfusiones.value, 
           procesoDonacion: form.pdTransfusiones.value,
-          tuvoTrasplantesPrevios: tuvoTrasplantes, // <-- CAMPO BOOLEANO RENOMBRADO
-          grupoSanguineo: form.grupoSanguineo.value, // Objeto anidado para el HLA (embebido en Antecedente)
+          tuvoTrasplantesPrevios: tuvoTrasplantes, 
+          grupoSanguineo: form.grupoSanguineo.value, 
           hlaDonante: {
             a1: form.hlaA1.value,
             a2: form.hlaA2.value,
@@ -138,19 +137,17 @@ function initPacienteForm(form) {
             dpa1_2: form.hlaDPA12.value,
             dpb1_1: form.hlaDPB11.value,
             dpb1_2: form.hlaDPB12.value,
-          }, // --- LAS LISTAS QUE FALTABAN ---
+          }, 
 
           listaTransfusiones: transfusionesList,
           listaTrasplantes: trasplantesList,
         },
       ],
-    }; // --- FIN DE LA SECCIÓN MODIFICADA ---
-
-    // console.log("Payload a enviar:", JSON.stringify(payload, null, 2)); // Descomenta esto para depurar
+    };
 
     try {
       showLoader();
-      await crearPaciente(payload); // Usamos la función de api.js
+      await crearPaciente(payload);
       hideLoader();
       showAlert(
         "Paciente guardado correctamente",
@@ -178,9 +175,6 @@ function initPacienteForm(form) {
     }
   });
 }
-/**
- * FIN DE LA FUNCIÓN MODIFICADA
- */
 
 function initSearchInputs() {
   const searchDni = document.getElementById("searchDni");
@@ -260,7 +254,6 @@ function verPerfilPaciente(pacienteId) {
   loadModuleAndInit("pacientes_detalle", pacienteId);
 }
 
-// Esta función es un punto de entrada útil para la vista de historial.
 export function initHistorialPacientes() {
   renderPacientes();
   initSearchInputs();

@@ -65,7 +65,7 @@
                     <div class="col-md-6">
                         <label for="domicilio" class="form-label">Domicilio</label>
                         <input type="text" class="form-control" id="domicilio" placeholder="Ingrese domicilio completo"
-                            required pattern="[A-Za-z0-9\s]+">
+                            required>
                         <div class="invalid-feedback">Ingrese solo letras y números.</div>
                     </div>
                     <div class="col-md-6">
@@ -181,6 +181,19 @@
                         <input type="date" class="form-control" id="fechaTransfusiones" required>
                         <div class="invalid-feedback">Seleccione una fecha.</div>
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="tipoTransfusion" class="form-label">Tipo de Transfusión</label>
+                        <select class="form-select" id="tipoTransfusion" name="tipoTransfusion" required>
+                            <option value="" selected disabled>Seleccionar un tipo...</option>
+                            <option value="CRIOPRECIPITADOS">Crioprecipitados</option>
+                            <option value="PLAQUETOFERESIS">Plaquetoferesis</option>
+                            <option value="PLASMAFERESIS">Plasmaferesis</option>
+                            <option value="SEDIMENTO_GLOBULAR">Sedimento Globular</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Por favor, seleccione un tipo de trasplante.
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row mb-3">
@@ -217,10 +230,8 @@
                         <label for="tipoTrasplante" class="form-label">Tipo de Trasplante</label>
                         <select class="form-select" id="tipoTrasplante" name="tipoTrasplante" required>
                             <option value="" selected disabled>Seleccionar un tipo...</option>
-                            <option value="CRIOPRECIPITADOS">Crioprecipitados</option>
-                            <option value="PLAQUETOFERESIS">Plaquetoferesis</option>
-                            <option value="PLASMAFERESIS">Plasmaferesis</option>
-                            <option value="SEDIMENTO_GLOBULAR">Sedimento Globular</option>
+                            <option value="DONANTECADAVERICO">Donante cadavérico</option>
+                            <option value="DONANTEVIVO">Donante vivo</option>
                         </select>
                         <div class="invalid-feedback">
                             Por favor, seleccione un tipo de trasplante.

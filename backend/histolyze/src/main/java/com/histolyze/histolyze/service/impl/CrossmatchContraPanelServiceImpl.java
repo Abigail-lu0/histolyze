@@ -51,7 +51,7 @@ public class CrossmatchContraPanelServiceImpl implements CrossmatchContraPanelSe
         existingCrossmatch.setNumeroMuestra(crossmatchDetails.getNumeroMuestra());
         existingCrossmatch.setAntiHla1(crossmatchDetails.getAntiHla1());
         existingCrossmatch.setAntiHla2(crossmatchDetails.getAntiHla2());
-        existingCrossmatch.setAntiMica(crossmatchDetails.getAntiMica());
+        existingCrossmatch.setResultado(crossmatchDetails.getResultado());
         existingCrossmatch.setAnticuerposNoConfirmados(crossmatchDetails.getAnticuerposNoConfirmados());
 
         // 5. Guardar la entidad actualizada

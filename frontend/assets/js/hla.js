@@ -2,138 +2,145 @@ import { getPacientes, guardarHlaAPI } from "./api.js";
 import { showAlert } from "./alerts.js";
 import { showLoader, hideLoader } from "./loader.js";
 
+// Guarda el paciente encontrado
+let pacienteEncontrado = null;
+
+// Referencias a elementos del DOM
+let formDisplayNombre, formDisplayDni, formDisplayMuestra, hiddenIdInput, nroMuestraInput, form;
+
 /**
- * Carga la lista de pacientes desde la API y la Muestra
- * en el <select> del formulario HLA.
+ * Resetea la información del paciente mostrado en la interfaz.
  */
-async function cargarPacientesEnSelect() {
-  // Asumimos que el <select> tiene este ID, como en el HTML que te mostré.
-  const select = document.getElementById("pacienteSelectHLA");
-  if (!select) return;
-
-  try {
-    // Reutilizamos tu función de api.js en lugar de 'fetch'
-    const pacientes = await getPacientes();
-
-    // Limpia opciones existentes (excepto la primera de placeholder)
-    select.innerHTML =
-      '<option value="" disabled selected>Seleccione un paciente...</option>';
-
-    // Llena el select con los pacientes
-    pacientes.forEach((paciente) => {
-      // Usamos los campos que vimos en tu 'paciente.js'
-      const option = document.createElement("option");
-      option.value = paciente.idPaciente;
-      option.textContent = `${paciente.nombre} ${paciente.apellido}`;
-      // Guardamos el número de muestra en el 'dataset' de la opción
-      option.dataset.numeroMuestra = paciente.numeroMuestra || "";
-      select.appendChild(option);
-    });
-  } catch (error) {
-    console.error("Error en cargarPacientesEnSelect:", error);
-    showAlert(
-      "No se pudieron cargar los pacientes.",
-      "danger",
-      4000,
-      "formAlertsHLA"
-    );
-  }
+function limpiarPacienteEncontrado() {
+    pacienteEncontrado = null;
+    // Limpia los campos dentro del formulario
+    if (formDisplayNombre) formDisplayNombre.textContent = "[Ninguno]";
+    if (formDisplayDni) formDisplayDni.textContent = "-";
+    if (formDisplayMuestra) formDisplayMuestra.textContent = "-";
+    if (hiddenIdInput) hiddenIdInput.value = "";
+    if (nroMuestraInput) nroMuestraInput.value = ""; // Limpia el input oculto
 }
 
 /**
- * Inicializa el módulo HLA:
- * 1. Carga los pacientes en el dropdown.
- * 2. Configura el listener para guardar el formulario.
+ * Busca un paciente por DNI o Nro. de Muestra y actualiza la UI.
+ */
+async function buscarPaciente() {
+    const dni = document.getElementById("searchDniHLA").value.trim();
+    const muestra = document.getElementById("searchMuestraHLA").value.trim();
+
+    if (!dni && !muestra) {
+        showAlert("Debe ingresar un DNI o un Nro. de Muestra para buscar.", "warning", 3000, "formAlertsHLA");
+        return;
+    }
+
+    showLoader();
+    try {
+        const pacientes = await getPacientes();
+        hideLoader();
+
+        const paciente = pacientes.find(p =>
+            (dni && p.dni === dni) || (muestra && p.numeroMuestra === muestra)
+        );
+
+        if (paciente) {
+            pacienteEncontrado = paciente;
+
+            // Actualiza los campos dentro del formulario
+            formDisplayNombre.textContent = `${paciente.nombre} ${paciente.apellido}`;
+            formDisplayDni.textContent = `${paciente.dni || "-"}`;
+            formDisplayMuestra.textContent = `${paciente.numeroMuestra || "No asignado"}`;
+            hiddenIdInput.value = paciente.idPaciente;
+            nroMuestraInput.value = paciente.numeroMuestra || ""; // Llena input oculto
+
+            // Dispara evento para validación
+            nroMuestraInput.dispatchEvent(new Event('input'));
+
+            showAlert("Paciente encontrado.", "success", 2000, "formAlertsHLA");
+
+        } else {
+            limpiarPacienteEncontrado();
+            showAlert("Paciente no encontrado.", "danger", 3000, "formAlertsHLA");
+        }
+    } catch (error) {
+        hideLoader();
+        console.error('Error en buscarPaciente:', error);
+        showAlert("Error al cargar la lista de pacientes.", "danger", 4000, "formAlertsHLA");
+        limpiarPacienteEncontrado();
+    }
+}
+
+/**
+ * Configura los listeners y obtiene referencias del DOM al cargar el módulo.
  */
 export function initHlaModule() {
-  const form = document.getElementById("formHLA");
-  if (!form) return;
+    form = document.getElementById("formHLA");
+    if (!form) return;
 
-  // Carga los pacientes en el select
-  cargarPacientesEnSelect();
+    // Obtiene referencias del DOM (usando IDs de HLA)
+    formDisplayNombre = document.getElementById("formDisplayNombreHLA");
+    formDisplayDni = document.getElementById("formDisplayDniHLA");
+    formDisplayMuestra = document.getElementById("formDisplayMuestraHLA");
+    hiddenIdInput = document.getElementById("hiddenPacienteIdHLA");
+    nroMuestraInput = document.getElementById("numeroMuestraHLA"); // Input oculto
 
-  // Listener para auto-popular el número de muestra
-  const selectPaciente = document.getElementById("pacienteSelectHLA");
-  const inputNumeroMuestra = document.getElementById("numeroMuestraHLA");
+    // Asigna listener al botón de búsqueda
+    document.getElementById("btnBuscarPacienteHLA").addEventListener("click", buscarPaciente);
 
-  if (selectPaciente && inputNumeroMuestra) {
-    selectPaciente.addEventListener("change", (e) => {
-      const selectedOption = e.target.options[e.target.selectedIndex];
-      const numeroMuestra = selectedOption.dataset.numeroMuestra || "";
+    // Asigna listener al envío del formulario
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-      inputNumeroMuestra.value = numeroMuestra;
-      inputNumeroMuestra.readOnly = !!numeroMuestra;
+        const idPaciente = hiddenIdInput.value;
+        if (!idPaciente) {
+            showAlert("Debe buscar y seleccionar un paciente primero.", "warning", 3000, "formAlertsHLA");
+            form.classList.add("was-validated");
+            return;
+        }
+
+        if (!form.checkValidity()) {
+            showAlert("Por favor, complete todos los campos obligatorios.", "warning", 3000, "formAlertsHLA");
+            form.classList.add("was-validated");
+            return;
+        }
+
+        // Prepara los datos para enviar
+        const hlaData = {
+            fechaRegistro: form.fechaRegistro.value,
+            numeroMuestra: form.numeroMuestraHLA.value, // Valor del input oculto
+            grupoSanguineo: form.grupoSanguineo.value,
+            locusA01: form.locusA01.value || null, // Usar null si está vacío
+            locusA02: form.locusA02.value || null,
+            locusB01: form.locusB01.value || null,
+            locusB02: form.locusB02.value || null,
+            locusC01: form.locusC01.value || null,
+            locusC02: form.locusC02.value || null,
+            locusDR01: form.locusDR01.value || null,
+            locusDR02: form.locusDR02.value || null,
+            locusDQA01: form.locusDQA01.value || null,
+            locusDQA02: form.locusDQA02.value || null,
+            locusDQB01: form.locusDQB01.value || null,
+            locusDQB02: form.locusDQB02.value || null,
+            locusDPA01: form.locusDPA01.value || null,
+            locusDPA02: form.locusDPA02.value || null,
+            locusDPB01: form.locusDPB01.value || null,
+            locusDPB02: form.locusDPB02.value || null
+        };
+
+        try {
+            showLoader();
+            await guardarHlaAPI(idPaciente, hlaData); // Llama a la API correcta
+            hideLoader();
+            showAlert("Estudio HLA guardado correctamente.", "success", 3000, "formAlertsHLA");
+
+            // Limpia formulario y estado
+            form.reset();
+            form.classList.remove("was-validated");
+            limpiarPacienteEncontrado();
+
+        } catch (err) {
+            hideLoader();
+            console.error('Error al guardar HLA:', err);
+            showAlert(err.message || "Error al guardar el estudio HLA.", "danger", 4000, "formAlertsHLA");
+        }
     });
-  }
-
-  // Listener del submit
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!form.checkValidity()) {
-      form.classList.add("was-validated");
-      showAlert(
-        "Por favor, complete todos los campos obligatorios",
-        "warning",
-        3000,
-        "formAlertsHLA"
-      );
-      return;
-    }
-
-    // 1. Obtener ID del paciente y nombre de muestra
-    const idPaciente = form.pacienteSelectHLA.value;
-    const numeroMuestra = form.numeroMuestraHLA.value;
-
-    // 2. Crear el objeto con los nombres DE LA CLASE JAVA (TipificacionesHLA.java)
-    const hlaData = {
-      // 1. Leemos del input 'numeroMuestraHLA'
-      // 2. Lo asignamos a 'nombreMuestra' (el campo de tu clase Java 'TipificacionesHLA')
-      numeroMuestra: form.numeroMuestraHLA.value,
-      fechaRegistro: form.fechaHLA.value,
-      grupoSanguineo: form.grupoSanguineoHLA.value,
-
-      locusA01: form.hlaA1H.value,
-      locusA02: form.hlaA2H.value,
-      locusB01: form.hlaB1H.value,
-      locusB02: form.hlaB2H.value,
-      locusC01: form.hlaC1H.value,
-      locusC02: form.hlaC2H.value,
-      locusDR01: form.hlaDR1H.value,
-      locusDR02: form.hlaDR2H.value,
-      locusDQA01: form.hlaDQA11H.value,
-      locusDQA02: form.hlaDQA12H.value,
-      locusDQB101: form.hlaDQB11H.value,
-      locusDQB102: form.hlaDQB12H.value,
-      locusDPA01: form.hlaDPA11H.value,
-      locusDPA02: form.hlaDPA12H.value,
-      locusDPB101: form.hlaDPB11H.value,
-      locusDPB102: form.hlaDPB12H.value,
-    };
-
-    try {
-      showLoader();
-      // 3. Llamar a la función real de guardado
-      await guardarHLA(idPaciente, hlaData);
-      hideLoader();
-      showAlert("HLA guardado correctamente", "success", 3000, "formAlertsHLA");
-      form.reset();
-      form.classList.remove("was-validated");
-      selectPaciente.value = "";
-      inputNumeroMuestra.readOnly = false;
-    } catch (err) {
-      hideLoader();
-      console.error("Error al guardar:", err);
-      showAlert(
-        err.message || "Error al guardar HLA",
-        "danger",
-        4000,
-        "formAlertsHLA"
-      );
-    }
-  });
-}
-
-// Envía la tipificación HLA a la API para guardarla.
-async function guardarHLA(idPaciente, hlaData) {
-  return guardarHlaAPI(idPaciente, hlaData);
 }

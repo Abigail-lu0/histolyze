@@ -1,4 +1,4 @@
-import { getPacienteById, updatePaciente } from "./api.js";
+import { getPacienteById, updatePaciente, getAnticuerposDsaAPI } from "./api.js";
 import { loadModuleAndInit } from "./sidebar.js";
 import { showAlert } from "./alerts.js";
 import { getUsuarioLogueado } from "./auth.js";
@@ -13,24 +13,21 @@ function limitarFechasAlDiaDeHoy() {
 }
 
 const formatters = {
-  trasplantes: (item, index) => `
+  trasplantes: (item, index, antecedente) => `
     <tr>
       <td>${item.fecha ? new Date(item.fecha).toLocaleDateString() : "N/A"}</td>
       <td>${item.tipo || item.organo || "N/A"}</td> 
+      <td>${antecedente?.procesoDonacion || "N/A"}</td> 
       <td class="text-end">
         <button class="btn btn-sm btn-outline-primary btn-editar" title="Editar" data-tipo="trasplantes" data-index="${index}" data-modal="modalAgregarTrasplante">✏️</button>
         <button class="btn btn-sm btn-outline-danger btn-eliminar" title="Eliminar" data-tipo="trasplantes" data-index="${index}">🗑️</button>
       </td>
     </tr>`,
   // Acepta 'antecedente' (3er arg) para leer el 'procesoDonacion' que está en el padre
-  transfusiones: (item, index, antecedente) => `
+  transfusiones: (item, index) => `
     <tr>
       <td>${item.fecha ? new Date(item.fecha).toLocaleDateString() : "N/A"}</td>
-      <td>${
-        antecedente && antecedente.procesoDonacion
-          ? antecedente.procesoDonacion
-          : "N/A"
-      }</td> 
+      <td>${item.tipo || "N/A"}</td>
       <td class="text-end">
         <button class="btn btn-sm btn-outline-primary btn-editar" title="Editar" data-tipo="transfusiones" data-index="${index}" data-modal="modalAgregarTransfusion">✏️</button>
         <button class="btn btn-sm btn-outline-danger btn-eliminar" title="Eliminar" data-tipo="transfusiones" data-index="${index}">🗑️</button>
@@ -41,7 +38,10 @@ const formatters = {
       <td>${item.fecha ? new Date(item.fecha).toLocaleDateString() : "N/A"}</td>
       <td>${item.numeroMuestra || "N/A"}</td>
       <td class="text-end">
-        <button class="btn btn-sm btn-outline-primary btn-editar" title="Editar" data-tipo="dsa" data-index="${index}" data-modal="modalAgregarDsa">✏️</button>
+        <button class="btn btn-sm btn-outline-info btn-ver" title="Ver Resultados" data-tipo="dsa" data-index="${index}" data-modal="modalVerDsaResultado">👁️</button>
+        
+        <button class="btn btn-sm btn-outline-primary btn-editar" title="Editar Fecha/Muestra" data-tipo="dsa" data-index="${index}" data-modal="modalAgregarDsa">✏️</button>
+        
         <button class="btn btn-sm btn-outline-danger btn-eliminar" title="Eliminar" data-tipo="dsa" data-index="${index}">🗑️</button>
       </td>
     </tr>`,
@@ -51,7 +51,7 @@ const formatters = {
       <td>${item.numeroMuestra || "N/A"}</td>
       <td>${item.antiHla1 !== null ? item.antiHla1 + "%" : "N/A"}</td> 
       <td>${item.antiHla2 !== null ? item.antiHla2 + "%" : "N/A"}</td>
-      <td>${item.antiMica !== null ? item.antiMica + "%" : "N/A"}</td>
+      <td>${item.resultado || "N/A"}</td>
       <td class="text-end">
          <button class="btn btn-sm btn-outline-primary btn-editar" title="Editar" data-tipo="crossmatch" data-index="${index}" data-modal="modalAgregarCrossmatch">✏️</button>
          <button class="btn btn-sm btn-outline-danger btn-eliminar" title="Eliminar" data-tipo="crossmatch" data-index="${index}">🗑️</button>
@@ -371,12 +371,12 @@ function renderAllHistorials() {
   const configHistorial = {
     trasplantes: {
       containerId: "contenedor-tabla-trasplantes",
-      headers: ["Fecha", "Tipo/Órgano"],
+      headers: ["Fecha", "Tipo", "PD"],
       formatter: formatters.trasplantes,
     },
     transfusiones: {
       containerId: "contenedor-tabla-transfusiones",
-      headers: ["Fecha", "Proceso Donación"],
+      headers: ["Fecha", "Tipo"],
       formatter: formatters.transfusiones,
     },
     tipificacionesHLA: {
@@ -402,7 +402,13 @@ function renderAllHistorials() {
     },
     crossmatch: {
       containerId: "contenedor-tabla-crossmatch",
-      headers: ["Fecha", "Nro. Muestra", "HLA I (%)", "HLA II (%)", "MICA (%)"],
+      headers: [
+        "Fecha",
+        "Nro. Muestra",
+        "HLA I (%)",
+        "HLA II (%)",
+        "Resultado MICA",
+      ],
       formatter: formatters.crossmatch,
     },
   };
@@ -540,7 +546,8 @@ async function handleAddOrEditHistorial(e, tipo, modalId) {
   if (tipo === "crossmatch") {
     registro.antiHla1 = registro.antiHla1 ? parseInt(registro.antiHla1) : null;
     registro.antiHla2 = registro.antiHla2 ? parseInt(registro.antiHla2) : null;
-    registro.antiMica = registro.antiMica ? parseInt(registro.antiMica) : null;
+    registro.resultado = registro.resultado || null;
+    delete registro.antiMica;
   }
 
   let lista;
@@ -558,8 +565,13 @@ async function handleAddOrEditHistorial(e, tipo, modalId) {
     }
     antecedente = pacienteActual.antecedentes[0];
 
-    if (tipo === "transfusiones" && registro.procesoDonacion) {
-      antecedente.procesoDonacion = registro.procesoDonacion;
+    if (tipo === "trasplantes") {
+      // 1. El PD se guarda en el Antecedente, no en el Trasplante
+      if (registro.procesoDonacion !== undefined) {
+        antecedente.procesoDonacion = registro.procesoDonacion;
+      }
+      // 2. Quítalo del objeto 'registro' para que no se guarde en el item 'Trasplante'
+      delete registro.procesoDonacion;
     }
 
     const nombreLista =
@@ -812,9 +824,8 @@ function handleEditarHistorial(tipo, index, modalId) {
     }
   }
 
-  // Caso especial para 'procesoDonacion' en 'transfusiones'
   if (
-    tipo === "transfusiones" &&
+    tipo === "trasplantes" &&
     antecedente &&
     form.elements["procesoDonacion"]
   ) {
@@ -824,6 +835,123 @@ function handleEditarHistorial(tipo, index, modalId) {
   form.dataset.editingIndex = index;
   const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
   modalInstance.show();
+}
+
+async function handleVerDsa(index, modalId) {
+  const modalElement = document.getElementById(modalId);
+  if (!modalElement) return;
+
+  const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+  
+  // 1. Obtener el item de DSA (como lo hacen las otras funciones)
+  const lista = pacienteActual?.dsa;
+  if (!Array.isArray(lista) || index < 0 || index >= lista.length) {
+    console.error(`Índice ${index} fuera de rango para DSA.`);
+    return;
+  }
+  const item = lista[index];
+  
+  // Asumimos que el 'item' tiene un ID (ej: idDsa, idEstudioDsa, o solo id)
+  // DEBES AJUSTAR 'item.idDsa' al nombre correcto de la propiedad ID
+  const idDsa = item.idDsa; // <--- AJUSTA ESTO (puede ser item.id)
+
+  if (!idDsa) {
+      showAlert("Error: No se pudo identificar el ID de este estudio DSA.", "danger");
+      return;
+  }
+
+  // 2. Mostrar el modal y la info básica
+  const container = document.getElementById("dsa-tabla-container");
+  container.innerHTML = '<p>Cargando resultados MFI...</p>'; // Loader
+  
+  document.getElementById("dsa-paciente").textContent = `${pacienteActual.nombre} ${pacienteActual.apellido}`;
+  document.getElementById("dsa-muestra").textContent = item.numeroMuestra || "N/A";
+  document.getElementById("dsa-fecha").textContent = new Date(item.fecha).toLocaleDateString();
+  
+  modalInstance.show();
+
+  // 3. Buscar los anticuerpos en la API
+  try {
+    const anticuerpos = await getAnticuerposDsaAPI(idDsa);
+    
+    // 4. Renderizar la tabla (función auxiliar abajo)
+    renderTablaMFI(container, anticuerpos);
+
+  } catch (err) {
+    console.error("Error al cargar anticuerpos DSA:", err);
+    container.innerHTML = `<div class="alert alert-danger">Error al cargar los resultados: ${err.message}</div>`;
+  }
+}
+
+function renderTablaMFI(container, anticuerpos) {
+  if (!anticuerpos || anticuerpos.length === 0) {
+    container.innerHTML = "<p>No se encontraron anticuerpos para este estudio.</p>";
+    return;
+  }
+
+  // 1. Filtrar por Clase
+  const claseI = anticuerpos.filter(ac => ac.tipo === 'Clase1');
+  const claseII = anticuerpos.filter(ac => ac.tipo === 'Clase2');
+
+  const sortMfiDescWithZerosLast = (a, b) => {
+    // Tratar 0 o null como -Infinity
+    const mfiA = (a.mfi ?? 0) === 0 ? -Infinity : a.mfi;
+    const mfiB = (b.mfi ?? 0) === 0 ? -Infinity : b.mfi;
+    
+    return mfiB - mfiA;
+  };
+
+  claseI.sort(sortMfiDescWithZerosLast);
+  claseII.sort(sortMfiDescWithZerosLast);
+
+  const maxRows = Math.max(claseI.length, claseII.length);
+  
+  let tablaHtml = `
+    <table class="table table-sm table-bordered" style="font-size: 0.8rem;">
+      <thead>
+        <tr class="table-secondary text-center">
+          <th colspan="4">ANTICUERPOS ANTI-HLA Clase I</th>
+          <th colspan="4">ANTICUERPOS ANTI-HLA Clase II</th>
+        </tr>
+        <tr class="table-light">
+          <th>Serológico</th>
+          <th>Alélico</th>
+          <th>MFI</th>
+          <th>Resultado</th>
+          <th>Serológico</th>
+          <th>Alélico</th>
+          <th>MFI</th>
+          <th>Resultado</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  for (let i = 0; i < maxRows; i++) {
+    const acI = claseI[i];
+    const acII = claseII[i];
+    
+    tablaHtml += `
+      <tr>
+        <td>${acI?.serologico || ''}</td>
+        <td>${acI?.alelico || ''}</td>
+        <td class="${(acI?.mfi > 1000) ? 'fw-bold' : ''}">${acI?.mfi ?? ''}</td>
+        <td>${acI?.resultado || ''}</td>
+        
+        <td>${acII?.serologico || ''}</td>
+        <td>${acII?.alelico || ''}</td>
+        <td class="${(acII?.mfi > 1000) ? 'fw-bold' : ''}">${acII?.mfi ?? ''}</td>
+        <td>${acII?.resultado || ''}</td>
+      </tr>
+    `;
+  }
+
+  tablaHtml += `
+      </tbody>
+    </table>
+  `;
+  
+  container.innerHTML = tablaHtml;
 }
 
 export async function initPacienteDetalleModule(id) {
@@ -855,7 +983,7 @@ export async function initPacienteDetalleModule(id) {
 
     renderDatosPersonales();
     renderAntecedentesGenerales();
-    renderAllHistorials(); // Renderiza tablas Y adjunta listeners de acción
+    renderAllHistorials();
 
     // Listeners principales
     document
@@ -888,16 +1016,26 @@ export async function initPacienteDetalleModule(id) {
         return;
       }
 
-      // Remove old listener if exists to prevent duplicates
-      // (This requires storing a reference, or a more complex setup)
-      // For simplicity, we assume init cleans up.
-
       form.addEventListener("submit", (e) =>
         handleAddOrEditHistorial(e, tipo, modalId)
       );
     };
 
-    // Adjuntamos listeners para "Guardar" (Submit) en todos los modales
+    ['modalAgregarTrasplante', 'modalAgregarTransfusion', 'modalAgregarDsa', 'modalAgregarCrossmatch', 'modalAgregarHLA'].forEach(modalId => {
+        const modalElement = document.getElementById(modalId);
+        if (modalElement) {
+            // Cuando el modal se termina de ocultar...
+            modalElement.addEventListener('hidden.bs.modal', () => {
+                setModalState(modalId, 'edit'); // Resetea a estado editable/limpio
+                const form = modalElement.querySelector('form');
+                if (form) {
+                   form.reset();
+                   delete form.dataset.editingIndex;
+                }
+            });
+        }
+    });
+
     setupModalFormListener("modalAgregarTrasplante", "trasplantes");
     setupModalFormListener("modalAgregarTransfusion", "transfusiones");
     setupModalFormListener("modalAgregarDsa", "dsa");
@@ -917,7 +1055,6 @@ export async function initPacienteDetalleModule(id) {
   }
 }
 
-// Adjunta un único listener delegado al acordeón para manejar botones de Editar/Eliminar
 function attachHistorialActionListeners() {
   const accordion = document.getElementById("historialAccordion");
   if (!accordion) return;
@@ -927,7 +1064,8 @@ function attachHistorialActionListeners() {
   }
 
   const handleHistorialActions = (e) => {
-    const target = e.target.closest("button.btn-editar, button.btn-eliminar");
+    // MODIFICADO: Añadir 'button.btn-ver'
+    const target = e.target.closest("button.btn-ver, button.btn-editar, button.btn-eliminar");
     if (!target) return;
 
     e.stopPropagation();
@@ -941,17 +1079,61 @@ function attachHistorialActionListeners() {
 
     if (target.classList.contains("btn-eliminar")) {
       handleEliminarHistorial(tipo, numericIndex);
+
     } else if (target.classList.contains("btn-editar")) {
-      if (!modal) {
-        console.error(
-          `Atributo 'data-modal' no encontrado en el botón editar.`
-        );
-        return;
-      }
+      // "Editar" abre el modal simple (como antes)
       handleEditarHistorial(tipo, numericIndex, modal);
+    
+    } else if (target.classList.contains("btn-ver")) {
+      // --- LÓGICA NUEVA PARA "VER" ---
+      if (tipo === 'dsa') {
+        handleVerDsa(numericIndex, modal);
+      } else {
+        // (Opcional) puedes hacer que 'ver' y 'editar' hagan lo mismo para otros tipos
+        handleEditarHistorial(tipo, numericIndex, modal);
+        // Y quizás deshabilitar el form (como sugerí antes)
+        // setModalState(modal, 'view'); 
+      }
     }
   };
 
   accordion.addEventListener("click", handleHistorialActions);
   accordion._historialActionListener = handleHistorialActions;
 }
+
+function setModalState(modalId, state = "edit") {
+  const modalElement = document.getElementById(modalId);
+  if (!modalElement) return;
+
+  const form = modalElement.querySelector("form");
+  const saveButton = modalElement.querySelector('button[type="submit"]');
+  const title = modalElement.querySelector(".modal-title");
+
+  // Guardar el título original la primera vez
+  if (!title.dataset.originalTitle) {
+    title.dataset.originalTitle = title.textContent;
+  }
+
+  if (state === "view") {
+    // MODO VISTA: Deshabilitar todo
+    form
+      .querySelectorAll("input, select")
+      .forEach((el) => (el.disabled = true));
+    if (saveButton) saveButton.style.display = "none";
+    title.textContent = "Ver Estudio DSA"; // Título personalizado
+  } else {
+    // MODO EDICIÓN/CREACIÓN: Habilitar todo
+    form
+      .querySelectorAll("input, select")
+      .forEach((el) => (el.disabled = false));
+    if (saveButton) saveButton.style.display = "block";
+    title.textContent = title.dataset.originalTitle; // Restaurar título
+
+    // Si no estamos editando (data-editing-index no existe), es un 'Agregar'
+    if (!form.dataset.editingIndex) {
+      form.reset(); // Limpiar el form al "Agregar"
+    }
+  }
+}
+// Asignarlo a window para que el HTML lo vea
+window.setModalState = setModalState;

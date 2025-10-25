@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/usuarios/**").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.PUT, "/api/pacientes/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/dsa/**").authenticated()
 
                         // Rutas de Pacientes y Datos Clínicos: para cualquier usuario autenticado
                         .requestMatchers(

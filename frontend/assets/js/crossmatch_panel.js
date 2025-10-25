@@ -2,98 +2,135 @@ import { getPacientes, guardarCrossmatchAPI } from "./api.js";
 import { showAlert } from "./alerts.js";
 import { showLoader, hideLoader } from "./loader.js";
 
+// Guarda el paciente encontrado en la búsqueda
+let pacienteEncontrado = null;
+
+// Referencias a elementos del DOM
+let hiddenIdInput, nroMuestraInput, form;
+let formDisplayNombre, formDisplayDni, formDisplayMuestra;
+
 /**
- * Carga pacientes en el select del formulario Crossmatch
+ * Resetea la información del paciente mostrado en la interfaz.
  */
-async function cargarPacientesEnSelect() {
-  const select = document.getElementById("pacienteSelectCrossmatch");
-  if (!select) return;
+function limpiarPacienteEncontrado() {
+    pacienteEncontrado = null;
+    if (hiddenIdInput) hiddenIdInput.value = "";
 
-  try {
-    const pacientes = await getPacientes(); 
-    
-    select.innerHTML = '<option value="" disabled selected>Seleccione un paciente...</option>';
-
-    pacientes.forEach(paciente => {
-      const option = document.createElement('option');
-      option.value = paciente.idPaciente;
-      option.textContent = `${paciente.nombre} ${paciente.apellido}`;
-      option.dataset.numeroMuestra = paciente.numeroMuestra || "";
-      select.appendChild(option);
-    });
-
-  } catch (error) {
-    console.error('Error en cargarPacientesEnSelect:', error);
-    showAlert("No se pudieron cargar los pacientes.", "danger", 4000, "formAlertsCrossmatch");
-  }
+    // Limpia Sección 2 (datos dentro del formulario)
+    if (formDisplayNombre) formDisplayNombre.textContent = "[Busque y seleccione un paciente arriba]";
+    if (formDisplayDni) formDisplayDni.textContent = "-";
+    if (formDisplayMuestra) formDisplayMuestra.textContent = "-";
+    if (nroMuestraInput) nroMuestraInput.value = ""; // Limpia el input oculto también
 }
 
 /**
- * Inicializa el módulo Crossmatch
+ * Busca un paciente por DNI o Nro. de Muestra y actualiza la UI.
+ */
+async function buscarPaciente() {
+    const dni = document.getElementById("searchDniCM").value.trim();
+    const muestra = document.getElementById("searchMuestraCM").value.trim();
+
+    if (!dni && !muestra) {
+        showAlert("Debe ingresar un DNI o un Nro. de Muestra para buscar.", "warning", 3000, "formAlertsCrossmatch");
+        return;
+    }
+
+    showLoader();
+    try {
+        const pacientes = await getPacientes();
+        hideLoader();
+
+        const paciente = pacientes.find(p =>
+            (dni && p.dni === dni) || (muestra && p.numeroMuestra === muestra)
+        );
+
+        if (paciente) {
+            pacienteEncontrado = paciente;
+
+            hiddenIdInput.value = paciente.idPaciente;
+            nroMuestraInput.value = paciente.numeroMuestra || ""; // Llena el input oculto
+
+            // Actualiza Sección 2 (datos dentro del formulario)
+            formDisplayNombre.textContent = `${paciente.nombre} ${paciente.apellido}`;
+            formDisplayDni.textContent = paciente.dni || "-";
+            formDisplayMuestra.textContent = paciente.numeroMuestra || "No asignado";
+
+            // Dispara evento para posible validación futura del campo oculto
+            nroMuestraInput.dispatchEvent(new Event('input'));
+
+            showAlert("Paciente encontrado.", "success", 2000, "formAlertsCrossmatch");
+
+        } else {
+            limpiarPacienteEncontrado();
+            showAlert("Paciente no encontrado.", "danger", 3000, "formAlertsCrossmatch");
+        }
+    } catch (error) {
+        hideLoader();
+        console.error('Error en buscarPaciente:', error);
+        showAlert("Error al cargar la lista de pacientes.", "danger", 4000, "formAlertsCrossmatch");
+        limpiarPacienteEncontrado(); // Limpia por si acaso
+    }
+}
+
+/**
+ * Configura los listeners y obtiene referencias del DOM al cargar el módulo.
  */
 export function initCrossmatchModule() {
-  const form = document.getElementById("formCrossmatch");
-  if (!form) return;
+    form = document.getElementById("formCrossmatch");
+    if (!form) return;
 
-  // Carga los pacientes
-  cargarPacientesEnSelect();
+    // Obtiene referencias del DOM
+    hiddenIdInput = document.getElementById("hiddenPacienteIdCM");
+    nroMuestraInput = document.getElementById("numeroMuestraCrossmatch"); // Input oculto
+    formDisplayNombre = document.getElementById("formDisplayNombreCM");
+    formDisplayDni = document.getElementById("formDisplayDniCM");
+    formDisplayMuestra = document.getElementById("formDisplayMuestraCM");
 
-  // Listener para auto-popular el número de muestra
-  const selectPaciente = document.getElementById("pacienteSelectCrossmatch");
-  const inputNumeroMuestra = document.getElementById("numeroMuestraCrossmatch");
+    // Asigna listener al botón de búsqueda
+    document.getElementById("btnBuscarPacienteCM").addEventListener("click", buscarPaciente);
 
-  if (selectPaciente && inputNumeroMuestra) {
-    selectPaciente.addEventListener('change', (e) => {
-      const selectedOption = e.target.options[e.target.selectedIndex];
-      const numeroMuestra = selectedOption.dataset.numeroMuestra || "";
-      
-      inputNumeroMuestra.value = numeroMuestra;
-      // Lo ponemos readonly (ya lo puse en el HTML, pero reforzamos)
-      inputNumeroMuestra.readOnly = !!numeroMuestra;
+    // Asigna listener al envío del formulario
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const idPaciente = hiddenIdInput.value;
+        if (!idPaciente) {
+            showAlert("Debe buscar y seleccionar un paciente primero.", "warning", 3000, "formAlertsCrossmatch");
+            form.classList.add("was-validated"); // Marca errores si es necesario
+            return;
+        }
+
+        if (!form.checkValidity()) {
+            showAlert("Por favor, complete todos los campos obligatorios.", "warning", 3000, "formAlertsCrossmatch");
+            form.classList.add("was-validated");
+            return;
+        }
+
+        // Prepara los datos para enviar
+        const crossmatchData = {
+            fecha: form.fecha.value,
+            numeroMuestra: form.numeroMuestraCrossmatch.value, // Valor del input oculto
+            antiHla1: parseInt(form.antiHla1.value, 10),
+            antiHla2: parseInt(form.antiHla2.value, 10),
+            resultado: form.resultado.value,
+            anticuerposNoConfirmados: form.anticuerposNoConfirmados.value
+        };
+
+        try {
+            showLoader();
+            await guardarCrossmatchAPI(idPaciente, crossmatchData);
+            hideLoader();
+            showAlert("Crossmatch guardado correctamente.", "success", 3000, "formAlertsCrossmatch");
+
+            // Limpia formulario y estado
+            form.reset();
+            form.classList.remove("was-validated");
+            limpiarPacienteEncontrado();
+
+        } catch (err) {
+            hideLoader();
+            console.error('Error al guardar Crossmatch:', err);
+            showAlert(err.message || "Error al guardar Crossmatch.", "danger", 4000, "formAlertsCrossmatch");
+        }
     });
-  }
-
-  // Listener del submit
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!form.checkValidity()) {
-      form.classList.add("was-validated");
-      showAlert("Por favor, complete todos los campos obligatorios", "warning", 3000, "formAlertsCrossmatch");
-      return;
-    }
-
-    const idPaciente = form.pacienteSelectCrossmatch.value;
-
-    // Crear el objeto con los nombres DE LA CLASE JAVA (CrossmatchContraPanel.java)
-    const crossmatchData = {
-      fecha: form.fecha.value,
-      numeroMuestra: form.numeroMuestraCrossmatch.value,
-      antiHla1: parseInt(form.antiHla1.value, 10),
-      antiHla2: parseInt(form.antiHla2.value, 10),
-      antiMica: parseInt(form.antiMica.value, 10),
-      anticuerposNoConfirmados: form.anticuerposNoConfirmados.value
-    };
-
-    try {
-      showLoader();
-      await guardarCrossmatch(idPaciente, crossmatchData); 
-      hideLoader();
-      showAlert("Crossmatch guardado correctamente", "success", 3000, "formAlertsCrossmatch");
-      form.reset();
-      form.classList.remove("was-validated");
-      selectPaciente.value = "";
-      inputNumeroMuestra.readOnly = true; // Volver a bloquear
-    } catch (err) {
-      hideLoader();
-      console.error('Error al guardar:', err);
-      showAlert(err.message || "Error al guardar Crossmatch", "danger", 4000, "formAlertsCrossmatch");
-    }
-  });
-}
-
-/**
- * Envía el Crossmatch a la API
- */
-async function guardarCrossmatch(idPaciente, crossmatchData) {
-  return guardarCrossmatchAPI(idPaciente, crossmatchData);
 }

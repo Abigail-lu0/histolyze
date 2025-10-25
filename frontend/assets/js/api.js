@@ -160,3 +160,8 @@ export function changePasswordAPI(datosPassword) {
     body: JSON.stringify(datosPassword),
   });
 }
+
+// --- DSA ---
+export function getAnticuerposDsaAPI(idDsa) {
+  return fetchAPI(`/anticuerpos/dsa/${idDsa}`);
+}

@@ -1,6 +1,7 @@
 package com.histolyze.histolyze.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -30,7 +31,7 @@ public class Usuario implements UserDetails {
     private String dni;
 
     @Column(name = "contrasena", nullable = false)
-    @JsonIgnore // No enviar la contraseña en el JSON
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     public enum Rol {
