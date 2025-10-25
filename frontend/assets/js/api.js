@@ -165,3 +165,11 @@ export function changePasswordAPI(datosPassword) {
 export function getAnticuerposDsaAPI(idDsa) {
   return fetchAPI(`/anticuerpos/dsa/${idDsa}`);
 }
+
+// --- Anticuerpos ---
+export function updateAnticuerpoAPI(idAnticuerpo, anticuerpoData) {
+  return fetchAPI(`/anticuerpos/${idAnticuerpo}`, {
+    method: "PUT",
+    body: JSON.stringify(anticuerpoData),
+  });
+}

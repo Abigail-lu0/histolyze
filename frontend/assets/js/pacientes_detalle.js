@@ -1,4 +1,9 @@
-import { getPacienteById, updatePaciente, getAnticuerposDsaAPI } from "./api.js";
+import {
+  getPacienteById,
+  updatePaciente,
+  getAnticuerposDsaAPI,
+  updateAnticuerpoAPI,
+} from "./api.js";
 import { loadModuleAndInit } from "./sidebar.js";
 import { showAlert } from "./alerts.js";
 import { getUsuarioLogueado } from "./auth.js";
@@ -39,8 +44,6 @@ const formatters = {
       <td>${item.numeroMuestra || "N/A"}</td>
       <td class="text-end">
         <button class="btn btn-sm btn-outline-info btn-ver" title="Ver Resultados" data-tipo="dsa" data-index="${index}" data-modal="modalVerDsaResultado">👁️</button>
-        
-        <button class="btn btn-sm btn-outline-primary btn-editar" title="Editar Fecha/Muestra" data-tipo="dsa" data-index="${index}" data-modal="modalAgregarDsa">✏️</button>
         
         <button class="btn btn-sm btn-outline-danger btn-eliminar" title="Eliminar" data-tipo="dsa" data-index="${index}">🗑️</button>
       </td>
@@ -842,62 +845,67 @@ async function handleVerDsa(index, modalId) {
   if (!modalElement) return;
 
   const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
-  
-  // 1. Obtener el item de DSA (como lo hacen las otras funciones)
+
   const lista = pacienteActual?.dsa;
   if (!Array.isArray(lista) || index < 0 || index >= lista.length) {
     console.error(`Índice ${index} fuera de rango para DSA.`);
     return;
   }
   const item = lista[index];
-  
-  // Asumimos que el 'item' tiene un ID (ej: idDsa, idEstudioDsa, o solo id)
-  // DEBES AJUSTAR 'item.idDsa' al nombre correcto de la propiedad ID
-  const idDsa = item.idDsa; // <--- AJUSTA ESTO (puede ser item.id)
+  const idDsa = item.idDsa; // Ajusta 'idDsa' si se llama 'id'
 
   if (!idDsa) {
-      showAlert("Error: No se pudo identificar el ID de este estudio DSA.", "danger");
-      return;
+    showAlert(
+      "Error: No se pudo identificar el ID de este estudio DSA.",
+      "danger"
+    );
+    return;
   }
 
-  // 2. Mostrar el modal y la info básica
+  // Limpiar botones y títulos de modos de edición anteriores
+  const saveButton = document.getElementById("btn-guardar-dsa-tabla");
+  const modalTitle = document.getElementById("modalVerDsaResultadoLabel");
+  if (saveButton) saveButton.style.display = "none";
+  modalTitle.textContent = "Ver Resultados del Estudio DSA";
+
   const container = document.getElementById("dsa-tabla-container");
-  container.innerHTML = '<p>Cargando resultados MFI...</p>'; // Loader
-  
-  document.getElementById("dsa-paciente").textContent = `${pacienteActual.nombre} ${pacienteActual.apellido}`;
-  document.getElementById("dsa-muestra").textContent = item.numeroMuestra || "N/A";
-  document.getElementById("dsa-fecha").textContent = new Date(item.fecha).toLocaleDateString();
-  
+  container.innerHTML = "<p>Cargando resultados MFI...</p>";
+
+  document.getElementById(
+    "dsa-paciente"
+  ).textContent = `${pacienteActual.nombre} ${pacienteActual.apellido}`;
+  document.getElementById("dsa-muestra").textContent =
+    item.numeroMuestra || "N/A";
+  document.getElementById("dsa-fecha").textContent = new Date(
+    item.fecha
+  ).toLocaleDateString();
+
   modalInstance.show();
 
-  // 3. Buscar los anticuerpos en la API
   try {
     const anticuerpos = await getAnticuerposDsaAPI(idDsa);
-    
-    // 4. Renderizar la tabla (función auxiliar abajo)
-    renderTablaMFI(container, anticuerpos);
 
+    // Pasamos idDsa para que los botones de editar lo conozcan
+    renderTablaMFI(container, anticuerpos, idDsa);
   } catch (err) {
     console.error("Error al cargar anticuerpos DSA:", err);
     container.innerHTML = `<div class="alert alert-danger">Error al cargar los resultados: ${err.message}</div>`;
   }
 }
 
-function renderTablaMFI(container, anticuerpos) {
+function renderTablaMFI(container, anticuerpos, idDsa) {
   if (!anticuerpos || anticuerpos.length === 0) {
-    container.innerHTML = "<p>No se encontraron anticuerpos para este estudio.</p>";
+    container.innerHTML =
+      "<p>No se encontraron anticuerpos para este estudio.</p>";
     return;
   }
 
-  // 1. Filtrar por Clase
-  const claseI = anticuerpos.filter(ac => ac.tipo === 'Clase1');
-  const claseII = anticuerpos.filter(ac => ac.tipo === 'Clase2');
+  const claseI = anticuerpos.filter((ac) => ac.tipo === "Clase1");
+  const claseII = anticuerpos.filter((ac) => ac.tipo === "Clase2");
 
   const sortMfiDescWithZerosLast = (a, b) => {
-    // Tratar 0 o null como -Infinity
     const mfiA = (a.mfi ?? 0) === 0 ? -Infinity : a.mfi;
     const mfiB = (b.mfi ?? 0) === 0 ? -Infinity : b.mfi;
-    
     return mfiB - mfiA;
   };
 
@@ -905,52 +913,67 @@ function renderTablaMFI(container, anticuerpos) {
   claseII.sort(sortMfiDescWithZerosLast);
 
   const maxRows = Math.max(claseI.length, claseII.length);
-  
+
+  // Función auxiliar para renderizar una fila
+  const renderRowHtml = (ac) => {
+    if (!ac) {
+      return `<td></td><td></td><td></td><td></td><td></td>`;
+    }
+    const mfiClass = ac.mfi > 1000 ? "fw-bold" : "";
+    // Pasamos el objeto anticuerpo completo como JSON al botón
+    const anticuerpoJson = JSON.stringify(ac);
+
+    return `
+      <td>${ac.serologico || ""}</td>
+      <td>${ac.alelico || ""}</td>
+      <td class="${mfiClass}">${ac.mfi ?? ""}</td>
+      <td>${ac.resultado || ""}</td>
+      <td class="text-center">
+        <button 
+          class="btn btn-sm btn-outline-primary btn-edit-anticuerpo" 
+          data-bs-toggle="modal" 
+          data-bs-target="#modalEditarAnticuerpo"
+          data-anticuerpo='${anticuerpoJson}'
+          data-id-dsa="${idDsa}">
+          ✏️
+        </button>
+      </td>
+    `;
+  };
+
   let tablaHtml = `
     <table class="table table-sm table-bordered" style="font-size: 0.8rem;">
       <thead>
         <tr class="table-secondary text-center">
-          <th colspan="4">ANTICUERPOS ANTI-HLA Clase I</th>
-          <th colspan="4">ANTICUERPOS ANTI-HLA Clase II</th>
+          <th colspan="5">ANTICUERPOS ANTI-HLA Clase I</th>
+          <th colspan="5">ANTICUERPOS ANTI-HLA Clase II</th>
         </tr>
         <tr class="table-light">
           <th>Serológico</th>
           <th>Alélico</th>
           <th>MFI</th>
           <th>Resultado</th>
+          <th>Acción</th>
           <th>Serológico</th>
           <th>Alélico</th>
           <th>MFI</th>
           <th>Resultado</th>
+          <th>Acción</th>
         </tr>
       </thead>
       <tbody>
   `;
 
   for (let i = 0; i < maxRows; i++) {
-    const acI = claseI[i];
-    const acII = claseII[i];
-    
     tablaHtml += `
       <tr>
-        <td>${acI?.serologico || ''}</td>
-        <td>${acI?.alelico || ''}</td>
-        <td class="${(acI?.mfi > 1000) ? 'fw-bold' : ''}">${acI?.mfi ?? ''}</td>
-        <td>${acI?.resultado || ''}</td>
-        
-        <td>${acII?.serologico || ''}</td>
-        <td>${acII?.alelico || ''}</td>
-        <td class="${(acII?.mfi > 1000) ? 'fw-bold' : ''}">${acII?.mfi ?? ''}</td>
-        <td>${acII?.resultado || ''}</td>
+        ${renderRowHtml(claseI[i])}
+        ${renderRowHtml(claseII[i])}
       </tr>
     `;
   }
 
-  tablaHtml += `
-      </tbody>
-    </table>
-  `;
-  
+  tablaHtml += `</tbody></table>`;
   container.innerHTML = tablaHtml;
 }
 
@@ -1021,20 +1044,117 @@ export async function initPacienteDetalleModule(id) {
       );
     };
 
-    ['modalAgregarTrasplante', 'modalAgregarTransfusion', 'modalAgregarDsa', 'modalAgregarCrossmatch', 'modalAgregarHLA'].forEach(modalId => {
-        const modalElement = document.getElementById(modalId);
-        if (modalElement) {
-            // Cuando el modal se termina de ocultar...
-            modalElement.addEventListener('hidden.bs.modal', () => {
-                setModalState(modalId, 'edit'); // Resetea a estado editable/limpio
-                const form = modalElement.querySelector('form');
-                if (form) {
-                   form.reset();
-                   delete form.dataset.editingIndex;
-                }
-            });
-        }
+    [
+      "modalAgregarTrasplante",
+      "modalAgregarTransfusion",
+      "modalAgregarDsa",
+      "modalAgregarCrossmatch",
+      "modalAgregarHLA",
+    ].forEach((modalId) => {
+      const modalElement = document.getElementById(modalId);
+      if (modalElement) {
+        // Cuando el modal se termina de ocultar...
+        modalElement.addEventListener("hidden.bs.modal", () => {
+          setModalState(modalId, "edit"); // Resetea a estado editable/limpio
+          const form = modalElement.querySelector("form");
+          if (form) {
+            form.reset();
+            delete form.dataset.editingIndex;
+          }
+        });
+      }
     });
+
+    const modalEditarAnticuerpo = document.getElementById(
+      "modalEditarAnticuerpo"
+    );
+    if (modalEditarAnticuerpo) {
+      modalEditarAnticuerpo.addEventListener("show.bs.modal", (event) => {
+        const button = event.relatedTarget; // Botón ✏️ que abrió el modal
+        const anticuerpo = JSON.parse(button.dataset.anticuerpo);
+        const idDsa = button.dataset.idDsa; // ID del padre, para refrescar
+
+        // Inyectar el formulario en el modal
+        const modalContent =
+          modalEditarAnticuerpo.querySelector(".modal-content");
+        modalContent.innerHTML = `
+          <form id="form-edit-anticuerpo">
+            <div class="modal-header">
+              <h5 class="modal-title">Editar Anticuerpo</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Serológico</label>
+                <input type="text" class="form-control" name="serologico" value="${
+                  anticuerpo.serologico || ""
+                }" readonly>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Alélico</label>
+                <input type="text" class="form-control" name="alelico" value="${
+                  anticuerpo.alelico || ""
+                }" readonly>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">MFI</label>
+                <input type="number" class="form-control" name="mfi" value="${
+                  anticuerpo.mfi ?? ""
+                }">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Resultado</label>
+                <input type="text" class="form-control" name="resultado" value="${
+                  anticuerpo.resultado || ""
+                }">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+          </form>
+        `;
+
+        // Añadir listener de submit
+        const form = modalContent.querySelector("#form-edit-anticuerpo");
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          // Crear el payload
+          // Enviamos el objeto completo como lo espera el PUT
+          const payload = {
+            ...anticuerpo,
+            mfi: form.mfi.value ? parseInt(form.mfi.value) : null,
+            resultado: form.resultado.value || null,
+          };
+
+          try {
+            await updateAnticuerpoAPI(payload.idAnticuerpo, payload);
+            showAlert("Anticuerpo actualizado", "success");
+
+            // Cerrar este modal
+            const modalInstance = bootstrap.Modal.getInstance(
+              modalEditarAnticuerpo
+            );
+            modalInstance.hide();
+
+            // Refrescar la tabla grande (buscando el item DSA por su idDsa)
+            // Encontramos el índice correcto del estudio DSA
+            const dsaIndex = pacienteActual.dsa.findIndex(
+              (d) => d.idDsa == idDsa
+            );
+            if (dsaIndex > -1) {
+              // Volver a llamar a handleVerDsa para refrescar la tabla
+              handleVerDsa(dsaIndex, "modalVerDsaResultado");
+            }
+          } catch (err) {
+            console.error("Error al actualizar anticuerpo:", err);
+            showAlert("Error al guardar: " + err.message, "danger");
+          }
+        });
+      });
+    }
 
     setupModalFormListener("modalAgregarTrasplante", "trasplantes");
     setupModalFormListener("modalAgregarTransfusion", "transfusiones");
@@ -1064,35 +1184,30 @@ function attachHistorialActionListeners() {
   }
 
   const handleHistorialActions = (e) => {
-    // MODIFICADO: Añadir 'button.btn-ver'
-    const target = e.target.closest("button.btn-ver, button.btn-editar, button.btn-eliminar");
+    const target = e.target.closest(
+      "button.btn-ver, button.btn-editar, button.btn-eliminar"
+    );
     if (!target) return;
 
     e.stopPropagation();
 
     const { tipo, index, modal } = target.dataset;
     const numericIndex = parseInt(index, 10);
-    if (isNaN(numericIndex) || numericIndex < 0) {
-      console.error("Índice inválido:", index);
-      return;
-    }
+    if (isNaN(numericIndex) || numericIndex < 0) return;
 
     if (target.classList.contains("btn-eliminar")) {
       handleEliminarHistorial(tipo, numericIndex);
-
     } else if (target.classList.contains("btn-editar")) {
-      // "Editar" abre el modal simple (como antes)
-      handleEditarHistorial(tipo, numericIndex, modal);
-    
-    } else if (target.classList.contains("btn-ver")) {
-      // --- LÓGICA NUEVA PARA "VER" ---
-      if (tipo === 'dsa') {
+      if (tipo === "dsa") {
         handleVerDsa(numericIndex, modal);
       } else {
-        // (Opcional) puedes hacer que 'ver' y 'editar' hagan lo mismo para otros tipos
         handleEditarHistorial(tipo, numericIndex, modal);
-        // Y quizás deshabilitar el form (como sugerí antes)
-        // setModalState(modal, 'view'); 
+      }
+    } else if (target.classList.contains("btn-ver")) {
+      if (tipo === "dsa") {
+        handleVerDsa(numericIndex, modal);
+      } else {
+        handleEditarHistorial(tipo, numericIndex, modal);
       }
     }
   };
