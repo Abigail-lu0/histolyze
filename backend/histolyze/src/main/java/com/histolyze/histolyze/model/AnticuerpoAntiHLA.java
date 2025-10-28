@@ -1,5 +1,6 @@
 package com.histolyze.histolyze.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,6 +35,7 @@ public class AnticuerpoAntiHLA {
     // Relación con DSA
     @ManyToOne
     @JoinColumn(name = "id_dsa", nullable = false)
+    @JsonIgnore
     private DSA dsa;
 
     public enum TipoClase {

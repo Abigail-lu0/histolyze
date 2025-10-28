@@ -77,6 +77,9 @@ public class TipificacionesHLA {
     @Column(name = "grupo_sanguineo", length = 10)
     private String grupoSanguineo;
 
+    @Column(columnDefinition = "TEXT")
+    private String observaciones;
+
     @ManyToOne
     @JoinColumn(name = "id_paciente", nullable = false)
     @JsonBackReference

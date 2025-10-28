@@ -70,6 +70,21 @@ export async function loadModuleAndInit(moduleName, id = null) {
         initCargaDsaModule();
         break;
       }
+      case "informe_dsa": {
+        const { initInformeDsaModule } = await import('./informes.js');
+        initInformeDsaModule();
+        break;
+      }
+      case "informe_familiar": {
+        const { initInformeFamiliarModule } = await import('./informes.js'); 
+        initInformeFamiliarModule();
+        break;
+      }
+      case "informe_hla": {
+        const { initInformeHlaModule } = await import('./informes.js');
+        initInformeHlaModule();
+        break;
+      }
     }
   } catch (err) {
     console.error(`Error al cargar el módulo '${moduleName}':`, err);

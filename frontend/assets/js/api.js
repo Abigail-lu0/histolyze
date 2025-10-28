@@ -173,3 +173,32 @@ export function updateAnticuerpoAPI(idAnticuerpo, anticuerpoData) {
     body: JSON.stringify(anticuerpoData),
   });
 }
+
+// --- INFORMES ---
+export function getInformeDsaAPI(dni) {
+  return fetchAPI(`/informes/dsa/buscar?dni=${dni}`);
+}
+
+export function guardarObservacionDsaAPI(idDsa, observaciones) {
+  const payload = { observaciones: observaciones };
+  return fetchAPI(`/informes/dsa/${idDsa}/observaciones`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getInformeFamiliarAPI(dni) {
+  return fetchAPI(`/informes/familiar/buscar?dni=${dni}`);
+}
+
+export function getInformeHlaAPI(dni) {
+  return fetchAPI(`/informes/hla/buscar?dni=${dni}`);
+}
+
+export function guardarObservacionHlaAPI(idHla, observaciones) {
+  const payload = { observaciones: observaciones };
+  return fetchAPI(`/informes/hla/${idHla}/observaciones`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}

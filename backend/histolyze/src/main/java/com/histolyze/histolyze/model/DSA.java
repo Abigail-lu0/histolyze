@@ -34,6 +34,9 @@ public class DSA {
     @Column(name = "dni_paciente", length = 20)
     private String dniPaciente;
 
+    @Column(columnDefinition = "TEXT")
+    private String observaciones;
+
     // Relación con Paciente
     @ManyToOne
     @JoinColumn(name = "id_paciente", nullable = false)

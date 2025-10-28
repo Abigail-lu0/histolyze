@@ -77,3 +77,6 @@ body {
     background-color: rgba(46, 109, 129, 0.1);
     color: var(--color-primary);
 }
+.hidden {
+    display: none;
+}
