@@ -2,6 +2,7 @@ package com.histolyze.histolyze.controller;
 
 import com.histolyze.histolyze.dto.InformeDsaResponseDTO;
 import com.histolyze.histolyze.dto.InformeHlaResponseDTO;
+import com.histolyze.histolyze.dto.InformeFamiliarResponseDTO;
 import com.histolyze.histolyze.service.InformeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -73,6 +74,37 @@ public class InformeController {
             }
             // Llamamos al nuevo método del servicio
             informeService.guardarObservacionHla(idHla, observaciones);
+            return ResponseEntity.noContent().build(); // 204 No Content
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/familiar/buscar")
+    public ResponseEntity<?> getInformeFamiliar(@RequestParam String dni) {
+        try {
+            InformeFamiliarResponseDTO datos = informeService.getDatosInformeFamiliar(dni);
+            // El frontend espera esta estructura directamente
+            return ResponseEntity.ok(datos);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/familiar/{idHlaReferencia}/observaciones")
+    public ResponseEntity<?> guardarObservacionesFamiliar(
+            @PathVariable Long idHlaReferencia,
+            @RequestBody Map<String, String> body) {
+
+        try {
+            String observaciones = body.get("observaciones"); // Usamos la misma clave "observaciones"
+            if (observaciones == null) {
+                return ResponseEntity.badRequest().body("El cuerpo debe contener 'observaciones'");
+            }
+            informeService.guardarObservacionFamiliar(idHlaReferencia, observaciones);
             return ResponseEntity.noContent().build(); // 204 No Content
 
         } catch (RuntimeException e) {

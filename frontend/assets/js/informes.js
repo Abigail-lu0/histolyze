@@ -5,6 +5,7 @@ import {
   getInformeFamiliarAPI,
   getInformeHlaAPI,
   guardarObservacionHlaAPI,
+  guardarObservacionFamiliarAPI,
 } from "./api.js";
 import { resetToHomeView } from "./sidebar.js";
 import { showAlert } from "./alerts.js";
@@ -125,68 +126,119 @@ export function initInformeDsaModule() {
 }
 
 // ==========================================================
-// === MÓDULO INFORME FAMILIAR (Aún con MOCK)
+// === MÓDULO INFORME FAMILIAR
 // ==========================================================
-// (Dejamos este con MOCK hasta que programes su backend)
 export function initInformeFamiliarModule() {
-  const btnBuscar = document.getElementById("btnBuscarInforme");
-  const btnDescargarPDF = document.getElementById("btnDescargarPDF");
-  const reportVisualizer = document.getElementById("report-visualizer");
+    const btnBuscar = document.getElementById('btnBuscarInforme');
+    const btnDescargarPDF = document.getElementById('btnDescargarPDF');
+    const reportVisualizer = document.getElementById('report-visualizer');
 
-  const vizPaciente = document.getElementById("viz-paciente");
-  const tablaAbcBody = document.querySelector("#tabla-familiar-abc tbody");
-  const tablaDrqBody = document.querySelector("#tabla-familiar-drq tbody");
+    const vizPaciente = document.getElementById('viz-paciente');
+    const tablaAbcBody = document.querySelector('#tabla-familiar-abc tbody');
+    const tablaDrqBody = document.querySelector('#tabla-familiar-drq tbody');
+    const inputObservaciones = document.getElementById('inputObservaciones'); // <-- Necesario
 
-  let datosActuales = null;
+    let datosActuales = null; // Guardará { paciente: {...}, donantes: [...], notaGeneral: "...", idHlaReferencia: ... }
 
-  if (btnBuscar) {
-    btnBuscar.addEventListener("click", async () => {
-      // CAMBIAR ESTO POR LA LLAMADA A LA API CUANDO ESTÉ LISTA
-      // const data = await getInformeFamiliarAPI(dni);
-      // cargarDatosVisualizacionFamiliar(data);
-      showAlert("Este módulo aún usa datos de simulación (MOCK).", "info");
-      cargarDatosVisualizacionFamiliar(MOCK_DATOS_FAMILIAR);
+    if (btnBuscar) {
+        // Convertido a ASYNC
+        btnBuscar.addEventListener('click', async () => {
+            const queryDni = document.getElementById('inputDni')?.value;
+            if (!queryDni) {
+                showAlert("Por favor, ingrese un DNI para buscar.", "warning");
+                return;
+            }
+
+            showLoader();
+            try {
+                // LLAMADA REAL A LA API
+                const data = await getInformeFamiliarAPI(queryDni);
+                cargarDatosVisualizacionFamiliar(data);
+                // Precargar la nota general si existe
+                inputObservaciones.value = data.notaGeneral || "";
+            } catch (err) {
+                console.error(err);
+                showAlert(`Error al buscar el informe: ${err.message}`, "danger");
+                reportVisualizer.classList.add('hidden');
+            } finally {
+                hideLoader();
+            }
+        });
+    }
+
+    if (btnDescargarPDF) {
+        // Convertido a ASYNC
+        btnDescargarPDF.addEventListener('click', async () => {
+            if (!datosActuales || !datosActuales.paciente) {
+                showAlert("Primero debe buscar un paciente.", "warning");
+                return;
+            }
+            // El ID del HLA de referencia que nos envió el backend
+            const idHlaReferencia = datosActuales.idHlaReferencia;
+            if (!idHlaReferencia) {
+                 showAlert("No se encontró un estudio HLA de referencia para guardar la nota. Asegúrese de que el paciente tenga al menos un estudio HLA cargado.", "warning");
+                 // Podríamos simular la descarga sin guardar, o detenernos.
+                 // Por ahora, simulamos sin guardar.
+                 console.warn("No hay idHlaReferencia, no se guardará la nota.");
+                 alert("Simulación de descarga FAMILIAR (Nota no guardada por falta de HLA ref.)");
+                 return; // Detener si no hay ID para guardar
+            }
+
+            const observaciones = inputObservaciones.value;
+
+            showLoader();
+            try {
+                // 1. GUARDAMOS LA NOTA GENERAL
+                await guardarObservacionFamiliarAPI(idHlaReferencia, observaciones);
+                showAlert("Nota general guardada con éxito.", "success");
+
+                // 2. SIMULAMOS LA DESCARGA
+                console.log("Nota familiar guardada, iniciando descarga simulada...");
+                alert("Nota guardada. La descarga real del PDF se implementará con JasperReports.");
+
+            } catch (err) {
+                console.error(err);
+                showAlert(`Error al guardar la nota: ${err.message}`, "danger");
+            } finally {
+                hideLoader();
+            }
+        });
+    }
+
+    document.getElementById('breadcrumb-inicio')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        resetToHomeView();
     });
-  }
 
-  if (btnDescargarPDF) {
-    btnDescargarPDF.addEventListener("click", () => {
-      alert("Simulación de descarga FAMILIAR");
-    });
-  }
+    // Función de Carga (Actualizada para usar DTO)
+    function cargarDatosVisualizacionFamiliar(data) {
+        datosActuales = data; // Guardar toda la respuesta
 
-  document
-    .getElementById("breadcrumb-inicio")
-    ?.addEventListener("click", (e) => {
-      e.preventDefault();
-      resetToHomeView();
-    });
+        // El paciente DTO ahora tiene la misma estructura que los donantes
+        const paciente = data.paciente;
+        const donantes = data.donantes || [];
 
-  function cargarDatosVisualizacionFamiliar(data) {
-    datosActuales = data;
-    vizPaciente.textContent = data.paciente.nombre;
-    tablaAbcBody.innerHTML = "";
-    tablaDrqBody.innerHTML = "";
-    const crearFilaAbc = (actor) =>
-      `<td>${actor.abc[0]}</td><td>${actor.abc[1]}</td><td>${actor.abc[2]}</td><td>${actor.abc[3]}</td><td>${actor.abc[4]}</td><td>${actor.abc[5]}</td>`;
-    const crearFilaDrq = (actor) =>
-      `<td>${actor.drq[0]}</td><td>${actor.drq[1]}</td><td>${actor.drq[2]}</td><td>${actor.drq[3]}</td><td>${actor.drq[4]}</td><td>${actor.drq[5]}</td><td>${actor.drq[6]}</td><td>${actor.drq[7]}</td><td>${actor.drq[8]}</td><td>${actor.drq[9]}</td>`;
-    tablaAbcBody.innerHTML += `<tr><td><strong>Paciente</strong></td><td>${
-      data.paciente.muestra
-    }</td>${crearFilaAbc(data.paciente)}</tr>`;
-    tablaDrqBody.innerHTML += `<tr><td><strong>Paciente</strong></td><td>${
-      data.paciente.muestra
-    }</td>${crearFilaDrq(data.paciente)}</tr>`;
-    data.donantes.forEach((donante) => {
-      tablaAbcBody.innerHTML += `<tr><td>${donante.nombre} (${
-        donante.vinculo
-      })</td><td>${donante.muestra}</td>${crearFilaAbc(donante)}</tr>`;
-      tablaDrqBody.innerHTML += `<tr><td>${donante.nombre} (${
-        donante.vinculo
-      })</td><td>${donante.muestra}</td>${crearFilaDrq(donante)}</tr>`;
-    });
-    reportVisualizer.classList.remove("hidden");
-  }
+        vizPaciente.textContent = paciente.nombre || "N/A";
+
+        tablaAbcBody.innerHTML = "";
+        tablaDrqBody.innerHTML = "";
+
+        // Función auxiliar (ahora usa los arrays directamente)
+        const crearFilaAbc = (actor) => actor.abc.map(val => `<td>${val || '-'}</td>`).join('');
+        const crearFilaDrq = (actor) => actor.drq.map(val => `<td>${val || '-'}</td>`).join('');
+
+        // Rellenar Paciente
+        tablaAbcBody.innerHTML += `<tr><td><strong>Paciente</strong></td><td>${paciente.muestra || '-'}</td>${crearFilaAbc(paciente)}</tr>`;
+        tablaDrqBody.innerHTML += `<tr><td><strong>Paciente</strong></td><td>${paciente.muestra || '-'}</td>${crearFilaDrq(paciente)}</tr>`;
+
+        // Rellenar Donantes
+        donantes.forEach(donante => {
+            tablaAbcBody.innerHTML += `<tr><td>${donante.nombre || '-'} (${donante.vinculo || '-'})</td><td>${donante.muestra || '-'}</td>${crearFilaAbc(donante)}</tr>`;
+            tablaDrqBody.innerHTML += `<tr><td>${donante.nombre || '-'} (${donante.vinculo || '-'})</td><td>${donante.muestra || '-'}</td>${crearFilaDrq(donante)}</tr>`;
+        });
+
+        reportVisualizer.classList.remove('hidden');
+    }
 }
 
 // ==========================================================

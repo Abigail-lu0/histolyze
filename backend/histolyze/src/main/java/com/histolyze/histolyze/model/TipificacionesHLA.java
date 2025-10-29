@@ -80,6 +80,9 @@ public class TipificacionesHLA {
     @Column(columnDefinition = "TEXT")
     private String observaciones;
 
+    @Column(name = "observaciones_familiar", columnDefinition = "TEXT")
+    private String observacionesFamiliar;
+
     @ManyToOne
     @JoinColumn(name = "id_paciente", nullable = false)
     @JsonBackReference

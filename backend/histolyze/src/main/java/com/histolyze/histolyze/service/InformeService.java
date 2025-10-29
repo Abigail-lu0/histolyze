@@ -1,15 +1,15 @@
 package com.histolyze.histolyze.service;
 
-import com.histolyze.histolyze.dto.DsaSimpleDTO;
-import com.histolyze.histolyze.dto.HlaSimpleDTO;
-import com.histolyze.histolyze.dto.InformeDsaResponseDTO;
-import com.histolyze.histolyze.dto.InformeHlaResponseDTO;
+import com.histolyze.histolyze.dto.*;
 import com.histolyze.histolyze.model.*;
 import com.histolyze.histolyze.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class InformeService {
@@ -28,6 +28,9 @@ public class InformeService {
 
     @Autowired
     private AntecedenteRepository antecedenteRepository;
+
+    @Autowired
+    private FamiliarRepository familiarRepository;
 
     public InformeDsaResponseDTO getDatosInformeDsa(String dni) {
 
@@ -108,6 +111,54 @@ public class InformeService {
         hla.setObservaciones(observaciones);
 
         // 3. Guardar la entidad actualizada en la BD
+        tipificacionesHLARepository.save(hla);
+    }
+
+    public InformeFamiliarResponseDTO getDatosInformeFamiliar(String dni) {
+        // 1. Buscar Paciente
+        Paciente paciente = pacienteRepository.findByDni(dni)
+                .orElseThrow(() -> new RuntimeException("Paciente no encontrado con DNI: " + dni));
+
+        // 2. Buscar su HLA más reciente (usado como referencia)
+        TipificacionesHLA hlaReferencia = tipificacionesHLARepository.findByPacienteOrderByFechaRegistroDesc(paciente)
+                .stream().findFirst()
+                .orElse(null); // Puede no tener HLA aún
+
+        // 3. Crear el DTO del paciente (incluso si no tiene HLA)
+        FamiliarReporteDTO pacienteDto = new FamiliarReporteDTO(hlaReferencia);
+        if(hlaReferencia == null && paciente != null){ // Si no hay HLA, al menos poner el nombre
+            pacienteDto.setNombre(paciente.getNombre() + " " + paciente.getApellido());
+        }
+
+
+        // 4. Buscar todos sus familiares
+        List<Familiar> familiares = paciente.getFamiliares() != null ? paciente.getFamiliares() : Collections.emptyList();
+
+        // 5. Convertir familiares a DTOs
+        List<FamiliarReporteDTO> donantesDto = familiares.stream()
+                .map(FamiliarReporteDTO::new) // Usa el constructor que creamos
+                .collect(Collectors.toList());
+
+        // 6. Obtener la nota general (desde el HLA de referencia)
+        String notaGeneral = (hlaReferencia != null) ? hlaReferencia.getObservacionesFamiliar() : null;
+        Long idHlaRef = (hlaReferencia != null) ? hlaReferencia.getIdHla() : null;
+
+        // 7. Construir y devolver la respuesta
+        return new InformeFamiliarResponseDTO(pacienteDto, donantesDto, notaGeneral, idHlaRef);
+    }
+
+    public void guardarObservacionFamiliar(Long idHlaReferencia, String observaciones) {
+        if (idHlaReferencia == null) {
+            throw new RuntimeException("No se puede guardar la nota sin un estudio HLA de referencia.");
+        }
+        // 1. Buscar el registro de Tipificacion HLA usado como referencia
+        TipificacionesHLA hla = tipificacionesHLARepository.findById(idHlaReferencia)
+                .orElseThrow(() -> new RuntimeException("Registro HLA de referencia no encontrado con ID: " + idHlaReferencia));
+
+        // 2. Settear las observaciones específicas del informe familiar
+        hla.setObservacionesFamiliar(observaciones);
+
+        // 3. Guardar la entidad actualizada
         tipificacionesHLARepository.save(hla);
     }
 }

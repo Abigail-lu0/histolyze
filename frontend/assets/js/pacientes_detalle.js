@@ -81,6 +81,22 @@ const formatters = {
          <button class="btn btn-sm btn-outline-danger btn-eliminar" title="Eliminar" data-tipo="tipificacionesHLA" data-index="${index}">🗑️</button>
       </td>
     </tr>`,
+  familiares: (item, index) => `
+    <tr>
+      <td>${
+        item.fechaRegistro
+          ? new Date(item.fechaRegistro).toLocaleDateString()
+          : "N/A"
+      }</td>
+      <td>${item.nombre || "N/A"}</td>
+      <td>${item.dni || "N/A"}</td>
+      <td>${item.vinculo || "N/A"}</td>
+      <td>${item.numeroMuestra || "N/A"}</td>
+      <td class="text-end">
+         <button class="btn btn-sm btn-outline-primary btn-editar" title="Editar" data-tipo="familiares" data-index="${index}" data-modal="modalAgregarFamiliar">✏️</button>
+         <button class="btn btn-sm btn-outline-danger btn-eliminar" title="Eliminar" data-tipo="familiares" data-index="${index}">🗑️</button>
+      </td>
+    </tr>`,
 };
 
 function renderDatosPersonales() {
@@ -414,6 +430,11 @@ function renderAllHistorials() {
       ],
       formatter: formatters.crossmatch,
     },
+    familiares: {
+      containerId: "contenedor-tabla-familiares",
+      headers: ["Fecha Reg.", "Nombre", "DNI", "Vínculo", "Nro. Muestra"],
+      formatter: formatters.familiares,
+    },
   };
 
   for (const tipo in configHistorial) {
@@ -543,6 +564,27 @@ async function handleAddOrEditHistorial(e, tipo, modalId) {
   const isEditing = index !== null;
   const usuarioLogueado = getUsuarioLogueado();
 
+  if (tipo === "familiares") {
+    registro.hlaData = {
+      a1: registro.a1, a2: registro.a2,
+      b1: registro.b1, b2: registro.b2,
+      c1: registro.c1, c2: registro.c2,
+      dr1: registro.dr1, dr2: registro.dr2,
+      dqa1_1: registro.dqa1_1, dqa1_2: registro.dqa1_2,
+      dqb1_1: registro.dqb1_1, dqb1_2: registro.dqb1_2,
+      dpa1_1: registro.dpa1_1, dpa1_2: registro.dpa1_2,
+      dpb1_1: registro.dpb1_1, dpb1_2: registro.dpb1_2,
+    };
+    delete registro.a1; delete registro.a2;
+    delete registro.b1; delete registro.b2;
+    delete registro.c1; delete registro.c2;
+    delete registro.dr1; delete registro.dr2;
+    delete registro.dqa1_1; delete registro.dqa1_2;
+    delete registro.dqb1_1; delete registro.dqb1_2;
+    delete registro.dpa1_1; delete registro.dpa1_2;
+    delete registro.dpb1_1; delete registro.dpb1_2;
+  }
+
   if (registro.fecha) registro.fecha = registro.fecha || null;
   if (registro.fechaRegistro)
     registro.fechaRegistro = registro.fechaRegistro || null;
@@ -550,7 +592,7 @@ async function handleAddOrEditHistorial(e, tipo, modalId) {
     registro.antiHla1 = registro.antiHla1 ? parseInt(registro.antiHla1) : null;
     registro.antiHla2 = registro.antiHla2 ? parseInt(registro.antiHla2) : null;
     registro.resultado = registro.resultado || null;
-    delete registro.antiMica;
+    delete registro.antiMica; // Asegurarse que no exista antiMica
   }
 
   let lista;
@@ -568,41 +610,42 @@ async function handleAddOrEditHistorial(e, tipo, modalId) {
     }
     antecedente = pacienteActual.antecedentes[0];
 
-    if (tipo === "trasplantes") {
-      // 1. El PD se guarda en el Antecedente, no en el Trasplante
-      if (registro.procesoDonacion !== undefined) {
-        antecedente.procesoDonacion = registro.procesoDonacion;
-      }
-      // 2. Quítalo del objeto 'registro' para que no se guarde en el item 'Trasplante'
-      delete registro.procesoDonacion;
+    // Mover lógica de procesoDonacion aquí si es necesario
+    if (tipo === "trasplantes" && registro.procesoDonacion !== undefined) {
+      antecedente.procesoDonacion = registro.procesoDonacion;
+      delete registro.procesoDonacion; // Eliminar del objeto trasplante
     }
 
     const nombreLista =
       tipo === "trasplantes" ? "listaTrasplantes" : "listaTransfusiones";
     if (!antecedente[nombreLista]) antecedente[nombreLista] = [];
     lista = antecedente[nombreLista];
+
   } else {
+    // Caso para HLA, DSA, Crossmatch, Familiares
     const nombreLista =
       tipo === "crossmatch"
         ? "crossmatchContraPanel"
         : tipo === "tipificacionesHLA"
         ? "tipificacionesHLA"
-        : tipo;
+        : tipo; // Usa 'dsa' o 'familiares' directamente
     if (!pacienteActual[nombreLista]) pacienteActual[nombreLista] = [];
     lista = pacienteActual[nombreLista];
   }
 
-  let itemOriginal = null;
-  if (isEditing && lista[index]) {
-    itemOriginal = { ...lista[index] };
-    const idKey = Object.keys(itemOriginal).find((key) =>
-      key.toLowerCase().startsWith("id")
-    );
-    const originalId = idKey ? itemOriginal[idKey] : null;
 
+  let itemOriginal = null;
+  if (isEditing && lista && lista[index]) {
+    itemOriginal = { ...lista[index] };
     lista[index] = { ...itemOriginal, ...registro };
   } else if (!isEditing) {
-    lista.push(registro);
+     if (lista) {
+       lista.push(registro);
+     } else {
+       console.error(`Error: La lista para '${tipo}' no está inicializada.`);
+       showAlert("Error interno al intentar agregar el registro.", "danger");
+       return;
+     }
   } else {
     console.error(`Índice de edición ${index} inválido para ${tipo}.`);
     showAlert(
@@ -617,39 +660,39 @@ async function handleAddOrEditHistorial(e, tipo, modalId) {
     : null;
 
   try {
-    // Preparamos un payload limpio para el backend, quitando referencias circulares
-    const payload = {
-      ...pacienteActual,
-      creadoPor: pacienteActual.creadoPor
-        ? { idUsuario: pacienteActual.creadoPor.idUsuario }
-        : null,
-      completadoPor: pacienteActual.completadoPor,
-      antecedentes:
-        pacienteActual.antecedentes?.map((ant) => ({
-          ...ant,
-          usuario: ant.usuario ? { idUsuario: ant.usuario.idUsuario } : null,
-          paciente: undefined,
-        })) || [],
-    };
-    payload.dsa =
-      payload.dsa?.map((d) => ({ ...d, paciente: undefined })) || [];
-    payload.crossmatchContraPanel =
-      payload.crossmatchContraPanel?.map((c) => ({
-        ...c,
-        paciente: undefined,
-      })) || [];
-    payload.tipificacionesHLA =
-      payload.tipificacionesHLA?.map((h) => ({ ...h, paciente: undefined })) ||
-      [];
+    const payload = { ...pacienteActual }; // Crear una copia superficial inicial
+
+    // Limpiar referencias circulares y objetos completos innecesarios
+    payload.creadoPor = payload.creadoPor ? { idUsuario: payload.creadoPor.idUsuario } : null;
+    payload.completadoPor = payload.completadoPor ? { idUsuario: payload.completadoPor.idUsuario } : null;
+
+    // Limpiar antecedentes
+    payload.antecedentes = payload.antecedentes?.map(ant => {
+        const cleanAnt = { ...ant };
+        delete cleanAnt.paciente; // Quitar referencia al paciente
+        cleanAnt.usuario = cleanAnt.usuario ? { idUsuario: cleanAnt.usuario.idUsuario } : null;
+        // Limpiar listas dentro de antecedente si contienen referencias inversas
+        cleanAnt.listaTransfusiones = cleanAnt.listaTransfusiones?.map(t => ({ ...t, antecedente: undefined })) || [];
+        cleanAnt.listaTrasplantes = cleanAnt.listaTrasplantes?.map(t => ({ ...t, antecedente: undefined })) || [];
+        return cleanAnt;
+    }) || [];
+
+    // Limpiar otras listas de nivel superior
+    payload.tipificacionesHLA = payload.tipificacionesHLA?.map(h => ({ ...h, paciente: undefined })) || [];
+    payload.dsa = payload.dsa?.map(d => ({ ...d, paciente: undefined })) || [];
+    payload.crossmatchContraPanel = payload.crossmatchContraPanel?.map(c => ({ ...c, paciente: undefined })) || [];
+    payload.familiares = payload.familiares?.map(f => ({ ...f, paciente: undefined })) || [];
+
 
     await updatePaciente(pacienteActual.idPaciente, payload);
+    // Recargar el paciente completo desde la API para asegurar consistencia
     pacienteActual = await getPacienteById(pacienteActual.idPaciente);
 
     showAlert(
       `Registro de ${tipo} ${isEditing ? "actualizado" : "agregado"} con éxito`,
       "success"
     );
-    renderAllHistorials();
+    renderAllHistorials(); // Renderiza todas las tablas con los datos actualizados
 
     const modalElement = document.getElementById(modalId);
     if (modalElement) {
@@ -666,12 +709,13 @@ async function handleAddOrEditHistorial(e, tipo, modalId) {
     );
 
     // Revertir el cambio local si falla la API
-    if (isEditing && itemOriginal) {
+    if (isEditing && itemOriginal && lista) {
       lista[index] = itemOriginal;
-    } else if (!isEditing) {
+    } else if (!isEditing && lista) {
       lista.pop();
     }
-    renderAllHistorials();
+    // No re-renderizar aquí para evitar perder el estado del formulario
+    // renderAllHistorials(); // Podría ser confuso re-renderizar tras error
   }
 }
 
@@ -1161,6 +1205,7 @@ export async function initPacienteDetalleModule(id) {
     setupModalFormListener("modalAgregarDsa", "dsa");
     setupModalFormListener("modalAgregarCrossmatch", "crossmatch");
     setupModalFormListener("modalAgregarHLA", "tipificacionesHLA");
+    setupModalFormListener("modalAgregarFamiliar", "familiares");
   } catch (err) {
     console.error("Error al inicializar el perfil del paciente:", err);
     const appContainer = document.querySelector("#app");
@@ -1176,11 +1221,11 @@ export async function initPacienteDetalleModule(id) {
 }
 
 function attachHistorialActionListeners() {
-  const accordion = document.getElementById("historialAccordion");
-  if (!accordion) return;
-
-  if (accordion._historialActionListener) {
-    accordion.removeEventListener("click", accordion._historialActionListener);
+  const container = document.querySelector('.container-fluid.px-4'); 
+  if (!container) return;
+  
+  if (container._historialActionListener) {
+    container.removeEventListener("click", container._historialActionListener);
   }
 
   const handleHistorialActions = (e) => {
@@ -1193,27 +1238,28 @@ function attachHistorialActionListeners() {
 
     const { tipo, index, modal } = target.dataset;
     const numericIndex = parseInt(index, 10);
-    if (isNaN(numericIndex) || numericIndex < 0) return;
+
+    if (isNaN(numericIndex) || numericIndex < 0) {
+        console.error("Índice inválido en el botón:", index);
+        return;
+    };
 
     if (target.classList.contains("btn-eliminar")) {
       handleEliminarHistorial(tipo, numericIndex);
     } else if (target.classList.contains("btn-editar")) {
       if (tipo === "dsa") {
-        handleVerDsa(numericIndex, modal);
       } else {
-        handleEditarHistorial(tipo, numericIndex, modal);
+         handleEditarHistorial(tipo, numericIndex, modal);
       }
     } else if (target.classList.contains("btn-ver")) {
       if (tipo === "dsa") {
         handleVerDsa(numericIndex, modal);
-      } else {
-        handleEditarHistorial(tipo, numericIndex, modal);
       }
     }
   };
 
-  accordion.addEventListener("click", handleHistorialActions);
-  accordion._historialActionListener = handleHistorialActions;
+  container.addEventListener("click", handleHistorialActions);
+  container._historialActionListener = handleHistorialActions;
 }
 
 function setModalState(modalId, state = "edit") {

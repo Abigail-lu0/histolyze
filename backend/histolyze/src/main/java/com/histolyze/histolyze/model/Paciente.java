@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(of = {"idPaciente", "dni"})
-@ToString(exclude = {"antecedentes", "tipificacionesHLA", "dsa", "crossmatchContraPanel", "creadoPor", "completadoPor"})
+@ToString(exclude = {"antecedentes", "tipificacionesHLA", "dsa", "crossmatchContraPanel", "creadoPor", "completadoPor", "familiares"})
 public class Paciente {
 
     @Id
@@ -76,6 +76,10 @@ public class Paciente {
     @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<CrossmatchContraPanel> crossmatchContraPanel;
+
+    @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<Familiar> familiares;
 
 }
 

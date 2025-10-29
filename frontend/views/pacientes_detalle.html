@@ -34,7 +34,18 @@
     </div>
   </div>
 
-
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5>Carga de Familiares</h5>
+    </div>
+    <div class="card-body">
+      <div class="d-flex justify-content-end mb-3">
+        <button class="btn btn-success btn-sm" data-bs-toggle="modal"
+          data-bs-target="#modalAgregarFamiliar">Agregar Familiar</button>
+      </div>
+      <div id="contenedor-tabla-familiares"></div>
+    </div>
+  </div>
   <h5>Historial Detallado</h5>
   <div class="accordion" id="historialAccordion">
 
@@ -128,10 +139,8 @@
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<div class="modal fade" id="modalAgregarTransfusion" tabindex="-1" aria-labelledby="modalAgregarTransfusionLabel"
+    </div> </div> <div class="modal fade" id="modalAgregarTransfusion" tabindex="-1" aria-labelledby="modalAgregarTransfusionLabel"
   aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -413,10 +422,7 @@
         <p><strong>Nro. Muestra:</strong> <span id="dsa-muestra"></span></p>
         <p><strong>Fecha:</strong> <span id="dsa-fecha"></span></p>
         <hr>
-        
-        <div id="dsa-tabla-container" class="table-responsive">
-          </div>
-
+        <div id="dsa-tabla-container" class="table-responsive"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
@@ -428,7 +434,132 @@
 <div class="modal fade" id="modalEditarAnticuerpo" tabindex="-1" aria-labelledby="modalEditarAnticuerpoLabel"
   aria-hidden="true">
   <div class="modal-dialog">
+    <div class="modal-content"></div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalAgregarFamiliar" tabindex="-1" aria-labelledby="modalAgregarFamiliarLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      </div>
+      <form>
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalAgregarFamiliarLabel">Agregar/Editar Familiar</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Fecha de Registro</label>
+              <input type="date" class="form-control" name="fechaRegistro" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nro. Muestra</label>
+              <input type="text" class="form-control" name="numeroMuestra">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nombre Completo</label>
+              <input type="text" class="form-control" name="nombre" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">DNI</label>
+              <input type="text" class="form-control" name="dni">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Vínculo Familiar</label>
+              <select class="form-select" name="vinculo" required>
+                <option value="" disabled selected>Seleccionar...</option>
+                <option value="PADRE">Padre</option>
+                <option value="MADRE">Madre</option>
+                <option value="HERMANO_A">Hermano/a</option>
+                <option value="HIJO_A">Hijo/a</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Grupo Sanguíneo</label>
+              <select class="form-select" name="grupoSanguineo">
+                <option value="">Seleccionar...</option>
+                <option value="A_POSITIVO">A+</option>
+                <option value="A_NEGATIVO">A-</option>
+                <option value="B_POSITIVO">B+</option>
+                <option value="B_NEGATIVO">B-</option>
+                <option value="AB_POSITIVO">AB+</option>
+                <option value="AB_NEGATIVO">AB-</option>
+                <option value="O_POSITIVO">O+</option>
+                <option value="O_NEGATIVO">O-</option>
+              </select>
+            </div>
+          </div>
+          <hr>
+          <h6>Locus Clase I</h6>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Locus A</label>
+              <div class="input-group">
+                <input type="text" class="form-control" name="a1" placeholder="A1">
+                <input type="text" class="form-control" name="a2" placeholder="A2">
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Locus B</label>
+              <div class="input-group">
+                <input type="text" class="form-control" name="b1" placeholder="B1">
+                <input type="text" class="form-control" name="b2" placeholder="B2">
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Locus C</label>
+              <div class="input-group">
+                <input type="text" class="form-control" name="c1" placeholder="C1">
+                <input type="text" class="form-control" name="c2" placeholder="C2">
+              </div>
+            </div>
+          </div>
+          <h6>Locus Clase II</h6>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Locus DR</label>
+              <div class="input-group">
+                <input type="text" class="form-control" name="dr1" placeholder="DR1">
+                <input type="text" class="form-control" name="dr2" placeholder="DR2">
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Locus DQA</label>
+              <div class="input-group">
+                <input type="text" class="form-control" name="dqa1_1" placeholder="DQA1">
+                <input type="text" class="form-control" name="dqa1_2" placeholder="DQA2">
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Locus DQB</label>
+              <div class="input-group">
+                <input type="text" class="form-control" name="dqb1_1" placeholder="DQB1">
+                <input type="text" class="form-control" name="dqb1_2" placeholder="DQB2">
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Locus DPA</label>
+              <div class="input-group">
+                <input type="text" class="form-control" name="dpa1_1" placeholder="DPA1">
+                <input type="text" class="form-control" name="dpa1_2" placeholder="DPA2">
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Locus DPB</label>
+              <div class="input-group">
+                <input type="text" class="form-control" name="dpb1_1" placeholder="DPB1">
+                <input type="text" class="form-control" name="dpb1_2" placeholder="DPB2">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>

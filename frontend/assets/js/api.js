@@ -202,3 +202,12 @@ export function guardarObservacionHlaAPI(idHla, observaciones) {
     body: JSON.stringify(payload),
   });
 }
+
+export function guardarObservacionFamiliarAPI(idHlaReferencia, observaciones) {
+  // Llama a: PUT /api/informes/familiar/{idHlaReferencia}/observaciones
+  const payload = { observaciones: observaciones };
+  return fetchAPI(`/informes/familiar/${idHlaReferencia}/observaciones`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+}
