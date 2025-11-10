@@ -2,9 +2,11 @@ package com.histolyze.histolyze.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "dsa")
@@ -42,5 +44,10 @@ public class DSA {
     @JoinColumn(name = "id_paciente", nullable = false)
     @JsonBackReference
     private Paciente paciente;
+
+    // Relación con los resultados de anticuerpos
+    @OneToMany(mappedBy = "dsa", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<AnticuerpoAntiHLA> anticuerpos;
 }
 

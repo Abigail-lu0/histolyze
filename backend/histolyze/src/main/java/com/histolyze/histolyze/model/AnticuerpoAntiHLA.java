@@ -1,6 +1,6 @@
 package com.histolyze.histolyze.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,6 +16,9 @@ public class AnticuerpoAntiHLA {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_anticuerpo")
     private Long idAnticuerpo;
+
+    @Column(name = "locus")
+    private String locus;
 
     @Column(nullable = false, length = 100)
     private String serologico;
@@ -35,7 +38,7 @@ public class AnticuerpoAntiHLA {
     // Relación con DSA
     @ManyToOne
     @JoinColumn(name = "id_dsa", nullable = false)
-    @JsonIgnore
+    @JsonBackReference
     private DSA dsa;
 
     public enum TipoClase {

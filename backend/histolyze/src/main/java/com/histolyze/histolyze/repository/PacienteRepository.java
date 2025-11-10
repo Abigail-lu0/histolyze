@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface PacienteRepository extends JpaRepository<Paciente, Long> {
 
     Optional<Paciente> findByDni(String dni);
+
+    Optional<Paciente> findByDniOrNumeroMuestra(String dni, String numeroMuestra);
 }

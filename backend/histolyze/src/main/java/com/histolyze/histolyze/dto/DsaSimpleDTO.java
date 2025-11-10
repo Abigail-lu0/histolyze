@@ -1,27 +1,20 @@
 package com.histolyze.histolyze.dto;
 
 import com.histolyze.histolyze.model.DSA;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDate;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class DsaSimpleDTO {
-    private Long idDsa;
-    private String numeroMuestra;
-    private LocalDate fecha;
-    private String nombrePaciente;
-    private String medicoSolicitante;
-    private String dniPaciente;
-    private Long idPaciente;
+    private String locus;
+    private String serologico;
+    private String alelico;
+    private Integer mfi;
+    private String resultado;
 
-    // Un constructor para mapear fácil desde la Entidad
-    public DsaSimpleDTO(DSA dsa) {
-        this.idDsa = dsa.getIdDsa();
-        this.numeroMuestra = dsa.getNumeroMuestra();
-        this.fecha = dsa.getFecha();
-        this.nombrePaciente = dsa.getNombrePaciente();
-        this.medicoSolicitante = dsa.getMedicoSolicitante();
-        this.dniPaciente = dsa.getDniPaciente();
-        this.idPaciente = dsa.getPaciente().getIdPaciente();
-    }
 }

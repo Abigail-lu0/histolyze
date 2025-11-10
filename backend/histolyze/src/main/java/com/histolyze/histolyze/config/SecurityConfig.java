@@ -52,7 +52,8 @@ public class SecurityConfig {
                                 "/api/pacientes/**",
                                 "/api/antecedentes/**",
                                 "/api/dsa/**",
-                                "/api/anticuerpos/**"
+                                "/api/anticuerpos/**",
+                                "/api/crossmatch/**"
                         ).authenticated()
 
                         // Cualquier otra ruta no definida explícitamente requiere autenticación

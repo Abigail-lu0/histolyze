@@ -211,3 +211,23 @@ export function guardarObservacionFamiliarAPI(idHlaReferencia, observaciones) {
     body: JSON.stringify(payload)
   });
 }
+
+// --- Crossmatch Virtual ---
+
+/**
+ * Obtiene los resultados DSA (anticuerpos) de un paciente (receptor).
+ * Endpoint: GET /api/crossmatch/paciente/{patientIdentifier}/dsa
+ */
+export function getDsaResultadosByPacienteId(patientIdentifier) {
+  // CORREGIDO: Usamos la variable 'patientIdentifier' que recibe la función
+  return fetchAPI(`/crossmatch/paciente/${patientIdentifier}/dsa`);
+}
+
+/**
+ * Obtiene la tipificación HLA de un Donante por ID.
+ * Endpoint: GET /api/crossmatch/donante/{donorId}/hla
+ */
+export function getHlaByDonanteId(donorId) {
+  // CORREGIDO: Usamos Path Variable (como espera el Controller) en lugar de Query Param
+  return fetchAPI(`/crossmatch/donante/${donorId}/hla`);
+}

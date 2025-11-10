@@ -70,6 +70,11 @@ export async function loadModuleAndInit(moduleName, id = null) {
         initCargaDsaModule();
         break;
       }
+      case "crossmatch_virtual": {
+        const { initCrossmatchModule } = await import('./crossmatch_virtual.js');
+        initCrossmatchModule();
+        break;
+      }
       case "informe_dsa": {
         const { initInformeDsaModule } = await import('./informes.js');
         initInformeDsaModule();

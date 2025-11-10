@@ -58,7 +58,7 @@ function initPacienteForm(form) {
       // Creamos un objeto Transfusion y lo añadimos a la lista
       transfusionesList.push({
         fecha: form.fechaTransfusiones.value,
-        tipo: form.tipoTransfusion.value,
+        tipo: form.tipoTransfusion.value || null,
       });
     }
 
@@ -87,7 +87,7 @@ function initPacienteForm(form) {
 
       trasplantesList.push({
         fecha: form.fechaTrasplante.value,
-        tipo: form.tipoTrasplante.value,
+        tipo: form.tipoTrasplante.value || null,
         hlaDonante: hlaDonanteObjeto,
       });
     } // 3. Construir el payload final con la ESTRUCTURA CORRECTA
@@ -119,7 +119,7 @@ function initPacienteForm(form) {
           fechaTransfusiones: form.fechaTransfusiones.value, 
           procesoDonacion: form.pdTransfusiones.value,
           tuvoTrasplantesPrevios: tuvoTrasplantes, 
-          grupoSanguineo: form.grupoSanguineo.value, 
+          grupoSanguineo: form.grupoSanguineo.value|| null, 
           hlaDonante: {
             a1: form.hlaA1.value,
             a2: form.hlaA2.value,
