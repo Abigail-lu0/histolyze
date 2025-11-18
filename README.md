@@ -94,6 +94,6 @@ Simplemente abre el archivo `frontend/index.html` en tu navegador web.
 
 * **Aliaga, Jazmín** - Coordinación / Backend / Frontend
 * **Huaman, Michael** - Backend / Infra
-* **Lucero, Abigail**
+* **Lucero, Abigail** - Tester / Manual de Usuario / Documentación
 * **Moro, Iriel** - Backend / Frontend
 * **Redolfi, Bruno** - Backend / Infra
